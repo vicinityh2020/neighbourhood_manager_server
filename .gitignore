@@ -40,6 +40,15 @@ jspm_packages
 # Optional REPL history
 .node_repl_history
 
+
+### GIT secret excluded files
+
+# git-secret keys
+.gitsecret/keys/random_seed
+
+# My secret files
+vcnt_server.config.js
+
 ### Angular excluded files
 
 /build/
@@ -67,5 +76,3 @@ npm-debug.log
 .vscode
 *.log
 *.stackdump
-
-
