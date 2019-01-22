@@ -1,0 +1,9 @@
+# Hidden git files
+.git*
+
+# READMEs
+*.md
+LICENSE
+
+# Secrets
+*.secret
