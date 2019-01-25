@@ -48,8 +48,8 @@ docker run -d -p $PORT:3000 \
         --name vcnt-app \
         --mount type=bind,source=/etc/letsencrypt/live/development.bavenir.eu/privkey.pem,target=/etc/letsencrypt/live/development.bavenir.eu/privkey.pem,readonly \
         --mount type=bind,source=/etc/letsencrypt/live/development.bavenir.eu/fullchain.pem,target=/etc/letsencrypt/live/development.bavenir.eu/fullchain.pem,readonly \
-        --mount type=bind,source=/etc/letsencrypt/live/development.bavenir.eu/ca.pem,target=/etc/letsencrypt/live/development.bavenir.eu/ca.pem,readonly \
-        -v /home/$USER/vcnt-logs:/logs \
+        --mount type=bind,source=/home/jorge/certificateMongo/ca.pem,target=/home/jorge/certificateMongo/ca.pem,readonly \
+        -v /home/$USER/vcnt-logs:/app/logs \
         vcnt-app:latest
 # Finish and close
 echo DONE!
