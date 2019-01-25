@@ -1,19 +1,20 @@
 #!/bin/sh
-usage="$(basename "$0") [-h] [-p port -e env]
+usage="$(basename "$0") [-h] [-p port -e env -u user]
  -- Builds vcnt-app docker
 
 where:
-    -h  show this help text
+    -h  shows help
     -p  port
-    -e  environment"
-
+    -e  environment
+    -u  user"
 
 # Default configutaion
 PORT=3001
 ENV="development"
+USER="jorge"
 
 # Get configuration
-while getopts 'hd:p:e:' option; do
+while getopts 'hd:p:e:u:' option; do
   case "$option" in
     h) echo "$usage"
       exit
@@ -23,6 +24,9 @@ while getopts 'hd:p:e:' option; do
       ;;
     p)
       PORT="$OPTARG"
+      ;;
+    u)
+      USER="$OPTARG"
       ;;
   esac
 done
@@ -35,6 +39,8 @@ docker rm vcnt-app
 docker rmi vcnt-app
 echo BUILDING THE CONTAINER...
 docker build -f Dockerfile.$ENV -t vcnt-app .
+echo SETTING A LOCAL FOLDER FOR THE LOGS...
+mkdir -p /home/$USER/vcnt-logs
 echo RUNNING THE CONTAINER...
 docker run -d -p $PORT:3000 \
         -it \
@@ -43,5 +49,7 @@ docker run -d -p $PORT:3000 \
         --mount type=bind,source=/etc/letsencrypt/live/development.bavenir.eu/privkey.pem,target=/etc/letsencrypt/live/development.bavenir.eu/privkey.pem,readonly \
         --mount type=bind,source=/etc/letsencrypt/live/development.bavenir.eu/fullchain.pem,target=/etc/letsencrypt/live/development.bavenir.eu/fullchain.pem,readonly \
         --mount type=bind,source=/etc/letsencrypt/live/development.bavenir.eu/ca.pem,target=/etc/letsencrypt/live/development.bavenir.eu/ca.pem,readonly \
+        -v /home/$USER/vcnt-logs:/logs \
         vcnt-app:latest
+# Finish and close
 echo DONE!

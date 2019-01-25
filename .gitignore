@@ -3,7 +3,6 @@
 ### NodeJS excluded files
 
 # Logs
-logs
 *.log
 npm-debug.log*
 
