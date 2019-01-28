@@ -39,6 +39,7 @@ docker kill vcnt-app >/dev/null 2>&1
 docker rm vcnt-app >/dev/null 2>&1
 docker rmi vcnt-app >/dev/null 2>&1
 echo REVEAL SECRET FILES
+cd $WORKDIR && git secret tell development@bavenir.eu
 cd $WORKDIR && git secret reveal
 echo BUILDING THE CONTAINER...
 docker build -f /home/$USER/vicinity_nm_api/Dockerfile.$ENV -t vcnt-app $WORKDIR
