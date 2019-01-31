@@ -48,6 +48,9 @@ jspm_packages
 # My secret files
 vcnt_server.config.js
 
+# ci
+nm_server.pipeline
+
 ### Angular excluded files
 
 /build/
