@@ -15,7 +15,7 @@ config.env = process.env.env || "test";
 //Token Secret
 config.jwtTokenSecret = process.env.SERVER_JWT_SECRET || "myfancytokensecretfortestingpurposes";
 // Platform base href
-config.baseHref = process.env.SERVER_BASE_HREF;
+config.baseHref = process.env.SERVER_UI_BASE_HREF;
 // Vicinity services dir
 config.vicinityServicesDir = process.env.vicinityServicesDir;
 // SSL certificates
