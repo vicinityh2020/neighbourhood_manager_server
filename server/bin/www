@@ -9,33 +9,41 @@ var app = require('../app');
 var debug = require('debug')('server:server');
 var config = require('../configuration/configuration');
 var https = require('https');
-// var http = require('http');
+var http = require('http');
 var fs = require("fs");
 
 /**
  * Set cetificates in options // Comment if no SSL
  */
 
+var options = {};
 
- var options = {
-   key: fs.readFileSync(config.key),
-   cert: fs.readFileSync(config.cert)
- };
-
+if(config.ssl){
+  options = {
+    key: fs.readFileSync(config.key),
+    cert: fs.readFileSync(config.cert)
+  };
+}
 
 /**
  * Get port from environment and store in Express.
  */
 
 var port = normalizePort(process.env.PORT || '3000');
-console.log('Port' + port);
+console.log('Using port: ' + port + "...");
 app.set('port', port);
 
 /**
  * Create HTTP server.
  */
-var server = https.createServer(options, app);
-// var server = http.createServer(app);
+var server;
+if(config.ssl){
+  server = https.createServer(options, app);
+  console.log("Using SSL encryption...");
+} else {
+  server = http.createServer(app);
+  console.log("Using insecure connection...");
+}
 
 /**
  * Listen on provided port, on all network interfaces.

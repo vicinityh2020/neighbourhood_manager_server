@@ -29,6 +29,9 @@ if(process.env.env === 'test' || config.env === 'test') return Promise.resolve(t
   payload = JSON.stringify(data);
 
   var options = {};
+  options.rejectUnauthorized = config.commServerInsecure;
+  // If the server uses certificates, specify the host
+  if(!config.commServerInsecure && config.commServerHost) options.servername = config.commServerHost;
   options.method = myMethod;
   options.headers = head;
   options.uri = config.commServerUrl + '/' + endPoint;
