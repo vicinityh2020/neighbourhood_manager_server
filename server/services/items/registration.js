@@ -169,7 +169,8 @@ function create(req, res, callback){
                     adapterType: adapterType,
                     adid: adid,
                     req: req,
-                    res: res
+                    res: res,
+                    cid: cid
                   } // additional parameters
                 );
               }

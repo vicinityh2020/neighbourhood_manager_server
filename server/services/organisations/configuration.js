@@ -13,6 +13,7 @@ var delUser = require('../../services/users/deleteUsers');
 var myNode = require('../../services/nodes/processNode');
 var sContracts = require('../../services/contracts/contracts');
 var uuid = require("uuid");
+var semanticRepo = require('../../services/semanticRepo/request');
 
 // Public functions
 
@@ -49,6 +50,7 @@ function remove(req, res, callback) {
     }
     var cid = mongoose.Types.ObjectId(req.body.decoded_token.orgid);
     var uid = mongoose.Types.ObjectId(req.body.decoded_token.uid);
+    var semantic_extid = req.body.decoded_token.cid;
     var mail = req.body.decoded_token.sub;
 
     // Start final result info object
@@ -86,7 +88,7 @@ function remove(req, res, callback) {
           })
           .then(function(response){
             deletingResults.users = response;
-            // TODO uncomment/comment next 8 lines to test or have real behaviour
+            // Remove organisation
             companyData.location = "";
             companyData.name = companyDataParsed.name + ":" + uuid();
             companyData.hasNotifications = [];
@@ -101,6 +103,13 @@ function remove(req, res, callback) {
           })
           .then(function(response){
             deletingResults.organisation = {cid: cid, result: 'Success'};
+            if(process.env.env !== 'test'){
+              return semanticRepo.callSemanticRepo([semantic_extid], "agents/delete", "POST");
+            } else {
+              return Promise.resolve(false);
+            }
+          })
+          .then(function(response){
             callback(false, deletingResults);
           })
           .catch(function(err){

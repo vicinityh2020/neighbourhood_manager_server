@@ -46,6 +46,7 @@ function saveDocuments(objects, otherParams, callback){
       obj.oid = uuid(); // response
       if(otherParams.semanticValidation){
         objects.oid = obj.oid; // response
+        objects["has-owner"] = "thing:" + otherParams.cid.extid;
         semanticValidation(objects, obj, pwd, infra_id, callback);
       } else {
         obj.info = objects;
@@ -99,6 +100,7 @@ function updateDocuments(thing, otherParams, callback){
                                                               "error": "The item does not belong to the agent/adapter"},
                                                               "The item does not belong to the agent/adapter");
       if(otherParams.semanticValidation){
+        thing["has-owner"] = "thing:" + otherParams.cid.extid;
         return semanticUpdate(thing);
       } else {
         return false;

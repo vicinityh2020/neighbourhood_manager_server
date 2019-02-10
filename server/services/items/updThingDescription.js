@@ -8,12 +8,12 @@ var audits = require('../../services/audit/audit');
 
 // Public function
 
-function updateContents(data, callback){
+function updateContents(data, cid){
   return new Promise(function(resolve, reject) {
     try{
       sync.forEachAll(data,
-        function(value, allresult, next){ // Process all updated items
-          updating(value, function(result){
+        function(value, allresult, next, otherParams){ // Process all updated items
+          updating(value, otherParams, function(result){
               allresult.push(result);
               next();
           }
@@ -26,7 +26,7 @@ function updateContents(data, callback){
           }
         },
         false,
-        {} // additional parameters
+        {agent_oid: cid.extid} // additional parameters
       );
     } catch(err) { // Catch error in main module
       reject(err);
@@ -39,12 +39,13 @@ function updateContents(data, callback){
 /*
 Updates MONGO item model of the given object
 */
-function updating(objects, callback){
+function updating(objects, other, callback){
   // Prepare objects
   var oid = objects.oid;
   var infra_id = objects["infrastructure-id"];
   var name = objects.name;
   delete objects["infrastructure-id"]; // remove infrastructure-id, no need to pass it further
+  objects["has-owner"] = "thing:" + other.agent_oid; // Add organisation owner of the device
   // Update in semantic repository
   semanticRepo.callSemanticRepo(objects, "td/create", "PUT")
   .then(function(response){

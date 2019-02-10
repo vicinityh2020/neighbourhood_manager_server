@@ -187,7 +187,7 @@ function updateItemContent(req,res){
       logger.log(req, res, {type: 'warn', data: "Missing data"});
       res.json({error: false, message: "Data is missing..."});
   } else {
-    nodeOp.findOne({adid:adid},{hasItems:1}) // Check if oids belong under agent
+    nodeOp.findOne({adid:adid},{hasItems:1, cid:1}) // Check if oids belong under agent
     .then(function(response){
       for(var i = 0; i < rawData.thingDescriptions.length; i++){
         for(var j = 0; j < response.hasItems.length; j++){
@@ -200,7 +200,7 @@ function updateItemContent(req,res){
         res.status(400);
         res.json({error: false, message: "Nothing to register or none of the items belong to the agent that is updating..."});
       } else {
-        return sUpdItems.updateContents(toUpdate);
+        return sUpdItems.updateContents(toUpdate, response.cid);
       }
     })
     .then(function(response){
