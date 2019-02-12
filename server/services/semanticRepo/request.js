@@ -34,8 +34,9 @@ function callSemanticRepo(data, endPoint, myMethod){
   if(config.semanticrepoTimeoutMs && Number(config.semanticrepoTimeoutMs) !== 0) options.timeout = config.semanticrepoTimeoutMs;
   request(options)
   .then(function(response){
+    var parsed = JSON.parse(response);
     if(process.env.env === 'dev' || config.env === 'dev'){
-      logger.debug(now + " : Semantic Repository : " + response.status + " : " + options.uri + " : " + response.data);
+      logger.debug(now + " : Semantic Repository : " + parsed.status + " : " + options.uri + " : " + JSON.stringify(parsed.data));
     }
     return Promise.resolve(response);
   })
