@@ -8,6 +8,7 @@ var logger = require('../middlewares/logBuilder');
 var sync = require('../services/asyncHandler/sync');
 var commServer = require('../services/commServer/request');
 var ctChecks = require('../services/contracts/contractChecks.js');
+var ctMain = require('../services/contracts/contracts.js');
 var audits = require('../services/audit/audit');
 
 // Public functions ================================
@@ -142,7 +143,6 @@ function changeUserAccessLevel(obj){
 /*
 Remove only one item from all contracts
 Case of reduce visibility or remove device
-
 */
 function removeOneItem(oid, uid, cts_ctid, otherParams){
   var token_mail = otherParams.userMail;
@@ -245,6 +245,13 @@ function processingPrivacy(id, otherParams, callback){
   })
   .then(function(response){
     return ctChecks.contractValidity(cts_ctid, otherParams.uid, otherParams.mail);
+  })
+  .then(function(response){
+    var removeCtSemRepo = [];
+    for(var i = 0, l = cts_ctid.length; i < l; i++){
+      removeCtSemRepo.push(ctMain.mgmtSemanticRepo(cts_ctid[i], "create"));
+    }
+    return Promise.all(removeCtSemRepo);
   })
   .then(function(response){
     return updateCommServer(cts_ctid, oid, otherParams);

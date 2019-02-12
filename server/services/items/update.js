@@ -161,7 +161,7 @@ function disableItem(req, res, callback, other){
       .then(function(response){
         var ids = [];
         ids.push(o_id);
-        return sharingRules.changePrivacy(ids, userId, userMail, c_id);
+        return sharingRules.changePrivacy(ids, userId, userMail, c_id, req, res);
         })
       .then(function(response){
         return deviceActivityNotif(

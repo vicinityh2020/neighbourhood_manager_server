@@ -7,6 +7,7 @@ var userOp = require('../../models/vicinityManager').user;
 var itemOp = require('../../models/vicinityManager').item;
 var notifHelper = require('../../services/notifications/notificationsHelper');
 var commServer = require('../../services/commServer/request');
+var semanticRepo = require('../../services/semanticRepo/request');
 var ctChecks = require('./contractChecks.js');
 var sync = require('../../services/asyncHandler/sync');
 var uuid = require('uuid/v4'); // Unique ID RFC4122 generator
@@ -347,6 +348,13 @@ function pauseContracts(req, res, ctData){
                               {$set: { "iotOwner.items.$.inactive" : true }},
                               {multi: true});
             })
+            .then(function(response){
+              var semRepoUpd = [];
+              for(var i = 0, l = ct_oids.length; i < l; i ++){
+                semRepoUpd.push(mgmtSemanticRepo(ct_oids[i], "create"));
+              }
+              return Promise.all(semRepoUpd);
+            })
             .then(function (response) {
               var toNotif = [];
               for(var i = 0, l = cts.length; i < l; i++){
@@ -408,6 +416,9 @@ function enableOneItem(req, res){
                       {$pull: { "hasContracts.$.inactive" : oid }});
      })
      .then(function(response){
+       return mgmtSemanticRepo(ct.extid, "create");
+     })
+     .then(function(response){
        return audits.create(
          { kind: 'user', item: uid.id, extid: uid.extid },
          {},
@@ -415,7 +426,7 @@ function enableOneItem(req, res){
          56, "Item " + oid + " enabled");
      })
      .then(function (response) {
-       logger.log(req, res, {type: 'debug', data: 'Enabling item from contract(s): ' + oid.extid});
+       logger.log(req, res, {type: 'debug', data: 'Enabling item from contract(s): ' + oid});
        resolve('Success');
      })
      .catch(function(err){
@@ -456,6 +467,13 @@ function removeOneItem(req, res){
        return ctChecks.contractValidity([ct.extid], uid.id, uid.extid);
      })
      .then(function(response){
+       if(!response){ // No contract removed
+         return mgmtSemanticRepo(ct.extid, "create");
+       } else {
+         return mgmtSemanticRepo(ct.extid, "delete");
+       }
+     })
+     .then(function(response){
        return audits.create(
          { kind: 'user', item: uid.id, extid: uid.extid },
          {},
@@ -463,7 +481,7 @@ function removeOneItem(req, res){
          56, "Item " + oid + " removed");
      })
      .then(function (response) {
-       logger.log(req, res, {type: 'debug', data: 'Delete item from contract(s): ' + oid.extid});
+       logger.log(req, res, {type: 'debug', data: 'Delete item from contract(s): ' + oid});
        resolve('Success');
      })
      .catch(function(err){
@@ -715,40 +733,44 @@ function removeOneUser(req, res, imForeign){
 Add or remove items to the contract
 */
 function moveItemsInContract(ctid, token_mail, items, add, req, res){
-  return new Promise(function(resolve, reject) {
-    if(items.length > 0){ // Check if there is any item to delete
-      sync.forEachAll(items,
-        function(value, allresult, next, otherParams) {
-          if(add){
-            addingOne(value, otherParams, req, res, function(value, result) {
-                allresult.push({value: value, result: result});
-                next();
-            });
-          } else {
-            deletingOne(value, otherParams, req, res, function(value, result) {
-                allresult.push({value: value, result: result});
-                next();
-            });
-          }
-        },
-        function(allresult) {
-          if(allresult.length === items.length){
-            resolve({"error": false, "message": allresult });
-          }
-        },
-        false,
-        {ctid: ctid, mail: token_mail}
-      );
+  if(items.length > 0){ // Check if there is any item to delete
+    sync.forEachAll(items,
+      function(value, allresult, next, otherParams) {
+        if(add){
+          addingOne(value, otherParams, req, res, function(value, result) {
+              allresult.push({value: value, result: result});
+              next();
+          });
+        } else {
+          deletingOne(value, otherParams, req, res, function(value, result) {
+              allresult.push({value: value, result: result});
+              next();
+          });
+        }
+      },
+      function(allresult) {
+        if(allresult.length === items.length){
+          return mgmtSemanticRepo(ctid, "create")
+          .then(function(response){
+            return Promise.resolve({"error": false, "message": allresult });
+          })
+          .catch(function(err){
+            return Promise.resolve({"error": true, "message": allresult });
+          });
+        }
+      },
+      false,
+      {ctid: ctid, mail: token_mail}
+    );
+  } else {
+    if(add){
+      logger.log(req, res, {type: 'warn', data:{user:token_mail, action: 'addItemToContract', message: "No items to be added"}});
+      return Promise.resolve({"error": false, "message": "Nothing to be added..."});
     } else {
-      if(add){
-        logger.log(req, res, {type: 'warn', data:{user:token_mail, action: 'addItemToContract', message: "No items to be added"}});
-        resolve({"error": false, "message": "Nothing to be added..."});
-      } else {
-        logger.log(req, res, {type: 'warn', data:{user:token_mail, action: 'removeItemFromContract', message: "No items to be removed"}});
-        resolve({"error": false, "message": "Nothing to be removed..."});
-      }
+      logger.log(req, res, {type: 'warn', data:{user:token_mail, action: 'removeItemFromContract', message: "No items to be removed"}});
+      return Promise.resolve({"error": false, "message": "Nothing to be removed..."});
     }
-  });
+  }
 }
 
 /*
@@ -804,6 +826,9 @@ Remove contract group in commServer
 */
 function cancelContract(id){
   return commServer.callCommServer({}, 'groups/' + id, 'DELETE')
+  .then(function(response){
+    return mgmtSemanticRepo(id, "delete");
+  })
   .catch(function(err){
     return new Promise(function(resolve, reject) {
       if(err.statusCode !== 404){
@@ -942,6 +967,62 @@ function uidInContract(uid, data){
   return false;
 }
 
+/**
+* Manages contracts in semanticRepo
+* @params{ ctid action(create, delete) }
+* @return Object{result}
+*/
+function mgmtSemanticRepo(id, action){
+  return payloadSemanticRepo(id, action)
+    .then(function(response){
+      var body = response.body;
+      var type = response.action;
+      return semanticRepo.callSemanticRepo(body, "contracts/" + type, "POST");
+    })
+    .then(function(response){
+      return Promise.resolve(response);
+    })
+    .catch(function(err){
+      return Promise.reject(err);
+    });
+}
+
+// Get payload for creating/deleting the contract instance in semanticRepo
+function payloadSemanticRepo(id, action){
+  var result = {};
+  var body;
+  if(action === "create"){
+    return contractOp.find({ctid: id},{readWrite:1, foreignIot:1, iotOwner:1})
+    .then(function(response){
+      if(response[0].iotOwner.items.length === 0 || response[0].foreignIot.items.length === 0){
+        result.body = [ id ];
+        result.action = "delete";
+        return Promise.resolve(result);
+      } else {
+        var petitioner_items = [];
+        getOnlyProp(petitioner_items, response[0].iotOwner.items, ['extid']);
+        result.body = [{
+          contract_id: id,
+          write_rights: response[0].readWrite,
+          requested_service: response[0].foreignIot.items[0].extid,
+          petitioner_items: petitioner_items,
+          service_owner: response[0].foreignIot.cid.extid,
+          service_petitioner: response[0].iotOwner.cid.extid
+        }];
+        result.action = "create";
+        return Promise.resolve(result);
+      }
+    })
+    .catch(function(err){
+      result.body = [ id ];
+      result.action = "delete";
+      return Promise.reject(result);
+    });
+  } else {
+    body = [ id ];
+    return Promise.resolve(body);
+  }
+}
 
 // modules exports ---------------------------
 
@@ -957,3 +1038,4 @@ module.exports.resetContract = resetContract;
 module.exports.removeOneItem = removeOneItem;
 module.exports.createNotifAndAudit = createNotifAndAudit;
 module.exports.fetchContract = fetchContract;
+module.exports.mgmtSemanticRepo = mgmtSemanticRepo;
