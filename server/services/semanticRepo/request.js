@@ -4,6 +4,7 @@
 var config = require('../../configuration/configuration');
 var logger = require('../../middlewares/logger');
 var request = require('request-promise');
+
 var head = {
   // 'authorization' : config.commServerToken,
   'Content-Type' : 'application/json; charset=utf-8',
@@ -22,6 +23,7 @@ myMethod - String - POST, GET, PUT, DELETE
 The headers are preconfigured
 */
 function callSemanticRepo(data, endPoint, myMethod){
+  var now = new Date();
   if(process.env.env === 'test') return Promise.resolve(true);
   payload = JSON.stringify(data);
   var options = {};
@@ -30,7 +32,17 @@ function callSemanticRepo(data, endPoint, myMethod){
   options.uri = config.semanticRepoUrl + endPoint;
   options.body = payload;
   if(config.semanticrepoTimeoutMs && Number(config.semanticrepoTimeoutMs) !== 0) options.timeout = config.semanticrepoTimeoutMs;
-  return request(options);
+  request(options)
+  .then(function(response){
+    if(process.env.env === 'dev' || config.env === 'dev'){
+      logger.debug(now + " : Semantic Repository : " + response.status + " : " + options.uri + " : " + response.data);
+    }
+    return Promise.resolve(response);
+  })
+  .catch(function(err){
+    logger.error(now + " : Semantic Repository : ERROR : " + options.uri + " : " + err);
+    return Promise.reject(err);
+  });
 }
 
 /*

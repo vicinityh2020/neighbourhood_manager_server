@@ -33,6 +33,7 @@ function create(req, res, callback){
           var myNode = {adid: adid, name: nodeName, id: nodeId};
           var cid = data.cid;
           var doSemanticValidation = config.enabledAdapters.indexOf(data.type[0]) !== -1; // Check if agent type allows semantic validation
+          if (process.env.env === 'test') doSemanticValidation = false;
           var adapterType = data.type[0] === "generic.adapter.sharq.eu" ? "shq" : "vcnt"; // TODO cover more types when needed
           var semanticTypes = {};
 
@@ -120,6 +121,7 @@ function create(req, res, callback){
             var myNode = {adid: adid, name: nodeName, id: nodeId};
             var cid = node.cid;
             var doSemanticValidation = config.enabledAdapters.indexOf(node.type[0]) !== -1;
+            if (process.env.env === 'test') doSemanticValidation = false;
             var adapterType = node.type[0] === "generic.adapter.sharq.eu" ? "shq" : "vcnt"; // TODO cover more types when needed
             var semanticTypes = {};
 

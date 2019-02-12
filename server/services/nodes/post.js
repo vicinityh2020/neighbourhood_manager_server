@@ -53,19 +53,11 @@ function postOne(req, res, callback){
       .then( function(response){ return commServer.callCommServer({}, 'users/' + data.adid + '/groups/' + cid + '_agents', 'POST'); })  //Add node to company group in commServer
       .then( function(response){ return commServer.callCommServer(groupData, 'groups/', 'POST'); }) // Create node group in commServer
       .then( function(response){ return userAccountOp.update( { _id: company_id}, {$push: {hasNodes: {"id": data._id, "extid": data.adid}}}); }) // Add node to company in MONGO
-      .then( function(response){ // Gets organisation name for adding to semanticRepo if VCNT
-        if(db.type === "generic.adapter.vicinity.eu"){
+      .then( function(response){ // Gets organisation name for adding to semanticRepo
           return userAccountOp.findOne( { _id: company_id}, {cid:1, name:1}).lean();
-        } else {
-          return Promise.resolve(false);
-        }
       })
-      .then( function(response){ // Add organisation to semanticrepo if VCNT
-        if(db.type === "generic.adapter.vicinity.eu"){
-          return semanticRepo.callSemanticRepo([{"oid": response.cid, "name": response.name}], "agents/create", "POST");
-        } else {
-          return Promise.resolve(false);
-        }
+      .then( function(response){ // Add organisation to semanticrepo
+        return semanticRepo.callSemanticRepo([{"oid": response.cid, "name": response.name}], "agents/create", "POST");
       })
       .then( function(response){
         return audits.create(

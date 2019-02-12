@@ -16,7 +16,7 @@ myMethod - String - POST, GET, PUT, DELETE
 The headers are preconfigured and the token is stored under /configuration
 */
 function callCommServer(data, endPoint, myMethod){
-
+var now = new Date();
 if(process.env.env === 'test' || config.env === 'test') return Promise.resolve(true);
 
   var head = {
@@ -44,7 +44,7 @@ if(process.env.env === 'test' || config.env === 'test') return Promise.resolve(t
      Promise.reject(err.stack);
    } else {
      if(process.env.env === 'dev' || config.env === 'dev'){
-       logger.debug(response.statusCode + " : " + response.request.method + " : " + response.request.uri.path);
+       logger.debug(now + " : Communication Server : " + response.statusCode + " : " + response.request.method + " : " + response.request.uri.path);
      }
      Promise.resolve(response);
    }
