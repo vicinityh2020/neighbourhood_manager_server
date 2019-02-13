@@ -1598,7 +1598,7 @@ function payloadSemanticRepo(id, action) {
       })
       .then(function(response) {
         var petitioner_items = [];
-        if(response[0].foreignIot.items[0].inactive) {
+        if(response[0].foreignIot.items.length !== 0 && response[0].foreignIot.items[0].inactive) {
           Promise.resolve(false);
         } else {
           getOnlyPropCt(petitioner_items, response[0].iotOwner.items);
