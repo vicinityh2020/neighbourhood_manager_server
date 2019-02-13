@@ -1568,9 +1568,13 @@ function uidInContract(uid, data) {
 function mgmtSemanticRepo(id, action) {
   return payloadSemanticRepo(id, action)
     .then(function(response) {
-      var body = response.body;
-      var type = response.action;
-      return semanticRepo.callSemanticRepo(body, "contracts/" + type, "POST");
+      if(!response){
+        return Promise.resolve("Nothing was created in Semantic Repository");
+      } else {
+        var body = response.body;
+        var type = response.action;
+        return semanticRepo.callSemanticRepo(body, "contracts/" + type, "POST");
+      }
     })
     .then(function(response) {
       return Promise.resolve(response);
@@ -1594,22 +1598,26 @@ function payloadSemanticRepo(id, action) {
       })
       .then(function(response) {
         var petitioner_items = [];
-        getOnlyPropCt(petitioner_items, response[0].iotOwner.items);
-        if (petitioner_items.length === 0 || response[0].foreignIot.items.length === 0) {
-          result.body = [id];
-          result.action = "delete";
-          return Promise.resolve(result);
+        if(response[0].foreignIot.items[0].inactive) {
+          Promise.resolve(false);
         } else {
-          result.body = [{
-            contract_id: id,
-            write_rights: response[0].readWrite,
-            requested_service: response[0].foreignIot.items[0].extid,
-            petitioner_items: petitioner_items,
-            service_owner: response[0].foreignIot.cid.extid,
-            service_petitioner: response[0].iotOwner.cid.extid
-          }];
-          result.action = "create";
-          return Promise.resolve(result);
+          getOnlyPropCt(petitioner_items, response[0].iotOwner.items);
+          if (petitioner_items.length === 0 || response[0].foreignIot.items.length === 0) {
+            result.body = [id];
+            result.action = "delete";
+            return Promise.resolve(result);
+          } else {
+            result.body = [{
+              contract_id: id,
+              write_rights: response[0].readWrite,
+              requested_service: response[0].foreignIot.items[0].extid,
+              petitioner_items: petitioner_items,
+              service_owner: response[0].foreignIot.cid.extid,
+              service_petitioner: response[0].iotOwner.cid.extid
+            }];
+            result.action = "create";
+            return Promise.resolve(result);
+          }
         }
       })
       .catch(function(err) {
