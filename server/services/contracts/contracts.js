@@ -33,6 +33,10 @@ _funcs.semanticRepo = semanticRepo;
 
 //Functions
 
+/**
+Create a contract request
+* @return {Callback}
+*/
 function creating(req, res, callback){
   pckContracts.create(req, res, _db, _funcs)
   .then(function(response) {
@@ -43,98 +47,26 @@ function creating(req, res, callback){
   });
 }
 
-
 /**
 Accept a contract request
 Input id (MONGO) or CTID, both supported
-* @return {Callback}
+* @return {Callback} With updItem
 */
 function accepting(req, res, callback) {
-  var id = req.params.id;
-  var token_uid = mongoose.Types.ObjectId(req.body.decoded_token.uid);
-  var token_mail = req.body.decoded_token.sub;
-
+  var id = req.params.id; // Contract id to be accepted
+  var obj = {};
   // Build queries (accept id or ctid)
-  var queryId = checkInput(id);
-  var queryLong = checkInput2(id);
-  queryLong._id = token_uid;
+  obj.queryId = checkInput(id, false);
+  obj.queryContract = checkInput(id, true);
+  obj.id = id;
 
-  var imAdmin = null;
-  var imForeign = null;
-  var updItem = {};
-  var items = [];
-  var query = {};
-  userOp.findOneAndUpdate(queryLong, {
-      $set: {
-        "hasContracts.$.approved": true,
-        "hasContracts.$.inactive": []
-      }
-    }, {
-      new: true
-    })
-    .then(function(response) {
-      for (var i = 0; i < response.hasContracts.length; i++) {
-        if (response.hasContracts[i].id.toString() === id.toString() || response.hasContracts[i].extid === id) {
-          imAdmin = response.hasContracts[i].imAdmin;
-          imForeign = response.hasContracts[i].imForeign;
-        }
-      }
-      if (imAdmin && imForeign) {
-        query = {
-          $set: {
-            "foreignIot.termsAndConditions": true
-          }
-        };
-        return contractOp.findOneAndUpdate(queryId, query, {
-          new: true
-        });
-      } else if (imAdmin && !imForeign) {
-        query = {
-          $set: {
-            "iotOwner.termsAndConditions": true
-          }
-        };
-        return contractOp.findOneAndUpdate(queryId, query, {
-          new: true
-        });
-      } else {
-        return contractOp.findOne(queryId);
-      }
-    })
-    .then(function(response) {
-      updItem = response;
-      if (imForeign) {
-        getOnlyProp(items, updItem.foreignIot.items.toObject(), ['id']);
-      } else {
-        getOnlyProp(items, updItem.iotOwner.items.toObject(), ['id']);
-      }
-      return itemOp.find({
-        "_id": {
-          $in: items
-        },
-        'uid.id': token_uid
-      }, {
-        oid: 1
-      });
-    })
-    .then(function(response) {
-      items = [];
-      getOnlyProp(items, response, ['oid']);
-      return moveItemsInContract(updItem.ctid, token_mail, items, true, req, res); // add = true
-    })
-    .then(function(response) {
-      return createNotifAndAudit(updItem._id, updItem.ctid, token_uid, token_mail, updItem.iotOwner.uid, updItem.foreignIot.uid, imAdmin, 'ACCEPT'); // Accepted = true
-    })
-    .then(function(response) {
-      logger.log(req, res, {
-        type: 'audit',
-        data: 'Contract accepted'
-      });
-      callback(false, updItem);
-    })
-    .catch(function(error) {
-      callback(true, error);
-    });
+  pckContracts.accept(obj, req, res, _db, _funcs)
+  .then(function(response) {
+    callback(false, response);
+  })
+  .catch(function(error) {
+    callback(true, error);
+  });
 }
 
 /**
@@ -142,47 +74,38 @@ Remove a contract
 * @return {Callback}
 */
 function removing(req, res, callback) {
-  var id = req.params.id;
-  var token_uid = mongoose.Types.ObjectId(req.body.decoded_token.uid);
-  var token_mail = req.body.decoded_token.sub;
-
+  var id = req.params.id; // Contract id to be accepted
+  var obj = {};
   // Build queries (accept id or ctid)
-  var queryId = checkInput(id);
-  var queryLong = checkInput2(id);
-  queryLong._id = token_uid;
-
-  var data = {};
-  var ctid = {};
-  var imForeign;
-  var imAdmin;
-
-  userOp.findOne(queryLong, {
-      hasContracts: 1
-    })
-    .then(function(response) {
-      for (var i = 0; i < response.hasContracts.length; i++) {
-        if (response.hasContracts[i].id.toString() === id.toString() || response.hasContracts[i].extid === id) {
-          imAdmin = response.hasContracts[i].imAdmin;
-          imForeign = response.hasContracts[i].imForeign;
-        }
-      }
-      if (imAdmin) {
-        removeAllContract(id, token_uid, token_mail);
-      } else {
-        removeOneUser(req, res, imForeign);
-      }
-    })
-    .then(function(response) {
-      logger.log(req, res, {
-        type: 'audit',
-        data: 'Contract removed'
-      });
-      callback(false, response);
-    })
-    .catch(function(error) {
-      callback(true, error);
-    });
+  obj.queryId = checkInput(id, false);
+  obj.queryContract = checkInput(id, true);
+  obj.id = id;
+  pckContracts.cancel(obj, req, res, _db, _funcs)
+  .then(function(response) {
+    callback(false, response);
+  })
+  .catch(function(error) {
+    callback(true, error);
+  });
 }
+
+/**
+Remove whole contract
+* @return {Promise}
+*/
+function removeAllContract(id, token_uid, token_mail) {
+  obj.queryId = checkInput(id, false);
+  obj.token_uid = token_uid;
+  obj.token_mail = token_uid;
+  pckContracts.removeAllContract(obj, _db, _funcs)
+  .then(function(response) {
+    resolve(response);
+  })
+  .catch(function(err) {
+    reject(err);
+  });
+}
+
 
 /**
  * Contract feeds
@@ -788,207 +711,6 @@ function fetchContract(req, res) {
 
 // Private Functions -------------------------------------------------
 
-/**
-Remove whole contract
-* @return {Promise}
-*/
-function removeAllContract(id, token_uid, token_mail) {
-  var users = [];
-  var items = [];
-  var data = {};
-  var ctid = {};
-  var queryId = checkInput(id);
-
-  return new Promise(function(resolve, reject) {
-    contractOp.findOne(queryId)
-      .then(function(response) {
-        var query = {
-          foreignIot: {},
-          iotOwner: {},
-          legalDescription: "",
-          status: "deleted"
-        };
-        data = response.toObject(); // Get rid of metadata
-        return contractOp.update(queryId, {
-          $set: query
-        });
-      })
-      .then(function(response) {
-        return cancelContract(data.ctid);
-      })
-      .then(function(response) {
-        ctid = {
-          id: data._id,
-          extid: data.ctid
-        };
-        getOnlyProp(users, data.foreignIot.uid, ['id']);
-        getOnlyProp(items, data.foreignIot.items, ['id']);
-        getOnlyProp(users, data.iotOwner.uid, ['id']);
-        getOnlyProp(items, data.iotOwner.items, ['id']);
-        return userOp.update({
-          _id: {
-            $in: users
-          }
-        }, {
-          $pull: {
-            hasContracts: ctid
-          }
-        }, {
-          multi: true
-        });
-      })
-      .then(function(response) {
-        return itemOp.update({
-          _id: {
-            $in: items
-          }
-        }, {
-          $pull: {
-            hasContracts: ctid
-          }
-        }, {
-          multi: true
-        });
-      })
-      .then(function(response) {
-        if (token_uid && token_mail) {
-          return createNotifAndAudit(data._id, data.ctid, token_uid, token_mail, data.iotOwner.uid, data.foreignIot.uid, true, "DELETE"); // Accepted = true
-        }
-      })
-      .then(function(response) {
-        resolve(response);
-      })
-      .catch(function(err) {
-        reject(err);
-      });
-  });
-}
-
-/**
-Remove a user in a contract
-* @return {Promise}
-*/
-function removeOneUser(req, res, imForeign) {
-  var id = req.params.id;
-  var queryId = checkInput(id);
-  var uid = mongoose.Types.ObjectId(req.body.decoded_token.uid);
-  var mail = req.body.decoded_token.sub;
-  var items = [];
-  var items_id = [];
-  var items_oid = [];
-  var query = {};
-  var ctid;
-  var data = {};
-  return new Promise(function(resolve, reject) {
-    // Build pulling ct query based on if service owner or not
-    if (imForeign) {
-      query = {
-        $pull: {
-          "foreignIot.uid": {
-            id: uid
-          }
-        }
-      };
-    } else {
-      query = {
-        $pull: {
-          "iotOwner.uid": {
-            id: uid
-          }
-        }
-      };
-    }
-    // Start process
-    contractOp.findOneAndUpdate(queryId, query, {
-        new: true
-      })
-      .then(function(response) {
-        id = response._id; // Recover _id (Case original input was ctid)
-        ctid = response.ctid;
-        data = response;
-        if (imForeign) {
-          getOnlyProp(items, response.foreignIot.items.toObject(), ['id']);
-        } else {
-          getOnlyProp(items, response.iotOwner.items.toObject(), ['id']);
-        }
-        return itemOp.find({
-          "_id": {
-            $in: items
-          },
-          'uid.id': uid
-        }, {
-          oid: 1
-        });
-      })
-      .then(function(response) {
-        getOnlyProp(items_id, response, ['_id']);
-        getOnlyProp(items_oid, response, ['oid']);
-        if (imForeign) {
-          query = {
-            $pull: {
-              "foreignIot.items": {
-                id: {
-                  $in: items_id
-                }
-              }
-            }
-          };
-        } else {
-          query = {
-            $pull: {
-              "iotOwner.items": {
-                id: {
-                  $in: items_id
-                }
-              }
-            }
-          };
-        }
-        return contractOp.update(queryId, query, {
-          multi: true
-        });
-      })
-      .then(function(response) {
-        return userOp.update({
-          _id: uid
-        }, {
-          $pull: {
-            hasContracts: {
-              id: id
-            }
-          }
-        });
-      })
-      .then(function(response) {
-        return itemOp.update({
-          _id: {
-            $in: items_id
-          }
-        }, {
-          $pull: {
-            hasContracts: {
-              id: id
-            }
-          }
-        }, {
-          multi: true
-        });
-      })
-      .then(function(response) {
-        return moveItemsInContract(ctid, mail, items_oid, false, req, res); // add = false
-      })
-      .then(function(response) {
-        return createNotifAndAudit(data._id, data.ctid, uid, mail, data.iotOwner.uid, data.foreignIot.uid, false, "DELETE"); // Accepted = true
-      })
-      .then(function(response) {
-        resolve(response);
-      })
-      .catch(function(err) {
-        reject(err);
-      });
-  });
-}
-
 /*
 Add or remove items to the contract
 */
@@ -1308,19 +1030,37 @@ function getOnlyPropCt(items, toAdd, properties) {
   }
 }
 
-/*
+/**
 Accepts or mongo id or external id
+* @params {ctid} id
+* @params {contracts} boolean
 */
-function checkInput(ctid) {
+function checkInput(ctid, contracts) {
+  var query;
   try {
+    // if error is external id
     var id = mongoose.Types.ObjectId(ctid);
-    return {
-      _id: id
-    };
+    if (contracts) {
+      query = {
+        'hasContracts.id': id
+      };
+    } else {
+      query = {
+        _id: id
+      };
+    }
+    return query;
   } catch (err) {
-    return {
-      ctid: ctid
-    };
+    if (contracts) {
+      query = {
+        'hasContracts.extid': ctid
+      };
+    } else {
+      query = {
+        ctid: ctid
+      };
+    }
+    return query;
   }
 }
 
@@ -1426,12 +1166,16 @@ function payloadSemanticRepo(id, action) {
 
 // modules exports ---------------------------
 
-module.exports.removing = removing;
 module.exports.creating = creating;
 module.exports.accepting = accepting;
+module.exports.removing = removing;
+module.exports.removeAllContract = removeAllContract;
+
+
+
+
 module.exports.contractFeeds = contractFeeds;
 module.exports.contractInfo = contractInfo;
-module.exports.removeAllContract = removeAllContract;
 module.exports.pauseContracts = pauseContracts;
 module.exports.enableOneItem = enableOneItem;
 module.exports.resetContract = resetContract;
@@ -1440,5 +1184,4 @@ module.exports.fetchContract = fetchContract;
 
 
 module.exports.mgmtSemanticRepo = mgmtSemanticRepo; // ???  Call remove one item
-
 module.exports.createNotifAndAudit = createNotifAndAudit;
