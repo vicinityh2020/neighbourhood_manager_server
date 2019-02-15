@@ -3,12 +3,10 @@
 // Global objects and variables
 var mongoose = require('mongoose');
 var logger = require("../../middlewares/logger");
-var audits = require('../../services/audit/audit');
 var contractOp = require('../../models/vicinityManager').contract;
 var userAccountOp = require('../../models/vicinityManager').userAccount;
 var userOp = require('../../models/vicinityManager').user;
 var itemOp = require('../../models/vicinityManager').item;
-var ctChecks = require("../../services/contracts/contractChecks.js");
 var ctHelper = require("../../services/contracts/contracts.js");
 var sync = require('../../services/asyncHandler/sync');
 

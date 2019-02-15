@@ -1,254 +1,48 @@
-// Global objects and variables
+/*
+* Global objects and variables
+*/
+
 var mongoose = require('mongoose');
-var logger = require("../../middlewares/logBuilder");
-var audits = require('../../services/audit/audit');
+var uuid = require('uuid/v4'); // Unique ID RFC4122 generator
+var pckContracts = require('sharq-contracts');
+var ctChecks = require('./contractChecks.js');
+
 var contractOp = require('../../models/vicinityManager').contract;
 var userOp = require('../../models/vicinityManager').user;
 var itemOp = require('../../models/vicinityManager').item;
+
+var logger = require("../../middlewares/logBuilder");
+var audits = require('../../services/audit/audit');
 var notifHelper = require('../../services/notifications/notificationsHelper');
 var commServer = require('../../services/commServer/request');
 var semanticRepo = require('../../services/semanticRepo/request');
-var ctChecks = require('./contractChecks.js');
 var sync = require('../../services/asyncHandler/sync');
-var uuid = require('uuid/v4'); // Unique ID RFC4122 generator
+
+var _db = {};
+_db.userOp = userOp;
+_db.itemOp = itemOp;
+_db.contractOp = contractOp;
+
+var _funcs = {};
+_funcs.commServer = commServer;
+_funcs.notifHelper = notifHelper;
+_funcs.audits = audits;
+_funcs.sync = sync;
+_funcs.logger = logger;
+_funcs.semanticRepo = semanticRepo;
 
 //Functions
 
-/**
-Create a contract request
-* @return {Callback}
-*/
-function creating(req, res, callback) {
-  var data = req.body;
-  var token_uid = mongoose.Types.ObjectId(req.body.decoded_token.uid);
-  var token_mail = req.body.decoded_token.sub;
-
-  var ct_id, ctid; // Contract id internal/external
-  var ct = new contractOp();
-  var idsService = []; // store internal ids services
-  var idsDevice = []; // store internal ids devices
-  var uidService = []; // store internal ids services owners
-  var uidDevice = []; // store internal ids devices owners
-
-  // Case contracting user not provided, assume it is the first in the array of contracted service
-  var contractingUser = data.contractingUser === undefined ? data.uidsService[0] : data.contractingUser;
-
-  //Building contract object
-  ct.ctid = data.ctid === undefined ? uuid() : data.ctid;
-  ct.foreignIot = {
-    cid: data.cidService,
-    uid: data.uidsService,
-    termsAndConditions: false,
-    items: data.oidsService
-  };
-  ct.iotOwner = {
-    cid: data.cidDevice,
-    uid: data.uidsDevice,
-    termsAndConditions: true,
-    items: data.oidsDevice
-  };
-  ct.readWrite = data.readWrite;
-  ct.legalDescription = 'lorem ipsum';
-  ct.type = 'serviceRequest';
-
-  // Save contract object
-  ct.save(
-    function(error, response) {
-      if (error) {
-        callback(true, error);
-      } else {
-        try {
-          ct_id = response._id;
-          ctid = response.ctid;
-          ct_type = response.type;
-
-          var cidService = data.cidService.extid;
-          var cidDevice = data.cidDevice.extid;
-          var ctidServiceItem = {
-            id: ct_id,
-            extid: response.ctid,
-            contractingParty: data.cidDevice.id,
-            contractingUser: token_uid,
-            approved: false,
-            readWrite: response.readWrite,
-            imForeign: true
-          };
-          var ctidServiceUser = {
-            id: ct_id,
-            extid: response.ctid,
-            contractingParty: data.cidDevice.id,
-            contractingUser: token_uid,
-            approved: false,
-            readWrite: response.readWrite,
-            imForeign: true
-          };
-          // If only one requester we asume that it is provinding all items itself, therefore the contract and its items are approved by default
-          var ctidDeviceItem = {
-            id: ct_id,
-            extid: response.ctid,
-            contractingParty: data.cidService.id,
-            contractingUser: contractingUser.id,
-            approved: data.uidsDevice.length === 1,
-            readWrite: response.readWrite
-          };
-          var ctidDeviceUser = {
-            id: ct_id,
-            extid: response.ctid,
-            contractingParty: data.cidService.id,
-            contractingUser: contractingUser.id,
-            approved: false,
-            readWrite: response.readWrite
-          };
-
-          // Get internal ids
-          getOnlyProp(uidService, data.uidsService, ['id']);
-          getOnlyProp(idsService, data.oidsService, ['id']);
-          getOnlyProp(uidDevice, data.uidsDevice, ['id']);
-          getOnlyProp(idsDevice, data.oidsDevice, ['id']);
-
-          // Update items and users involved in the contract
-          userOp.update({
-              _id: {
-                $in: uidDevice
-              }
-            }, {
-              $push: {
-                hasContracts: ctidDeviceUser
-              }
-            }, {
-              multi: true
-            })
-            .then(function(response) { // Update main requester
-              return userOp.update({
-                _id: token_uid,
-                "hasContracts.id": ct_id
-              }, {
-                $set: {
-                  "hasContracts.$.imAdmin": true,
-                  "hasContracts.$.approved": true
-                }
-              });
-            })
-            .then(function(response) {
-              return itemOp.update({
-                _id: {
-                  $in: idsDevice
-                }
-              }, {
-                $push: {
-                  hasContracts: ctidDeviceItem
-                }
-              }, {
-                multi: true
-              });
-            })
-            .then(function(response) {
-              return userOp.update({
-                _id: {
-                  $in: uidService
-                }
-              }, {
-                $push: {
-                  hasContracts: ctidServiceUser
-                }
-              }, {
-                multi: true
-              });
-            })
-            .then(function(response) { // Update main provider
-              return userOp.update({
-                _id: contractingUser.id,
-                "hasContracts.id": ct_id
-              }, {
-                $set: {
-                  "hasContracts.$.imAdmin": true
-                }
-              });
-            })
-            .then(function(response) {
-              return itemOp.update({
-                _id: {
-                  $in: idsService
-                }
-              }, {
-                $push: {
-                  hasContracts: ctidServiceItem
-                }
-              }, {
-                multi: true
-              });
-            })
-            .then(function(response) {
-              // Create contract group in comm server
-              return createContract(ctid, 'Contract: ' + ct_type);
-            })
-            .then(function(response) {
-              // Get contract creator devices -- To add in contract because we assume that contract requester agrees terms
-              return itemOp.find({
-                "_id": {
-                  $in: idsDevice
-                },
-                'uid.id': token_uid
-              }, {
-                oid: 1
-              });
-            })
-            .then(function(response) {
-              var items = [];
-              // Get OID of devices to be enabled in contract
-              getOnlyProp(items, response, ['oid']);
-              // Add items in contract group of comm server
-              return moveItemsInContract(ctid, token_mail, items, true, req, res); // add = true
-            })
-            .then(function(response) {
-              return notifHelper.createNotification({
-                  kind: 'user',
-                  item: token_uid,
-                  extid: token_mail
-                }, {
-                  kind: 'user',
-                  item: contractingUser.id,
-                  extid: contractingUser.extid
-                }, {
-                  kind: 'contract',
-                  item: ct_id,
-                  extid: ctid
-                },
-                'info', 21, null);
-            })
-            .then(function(response) {
-              return audits.create({
-                  kind: 'user',
-                  item: token_uid,
-                  extid: token_mail
-                }, {
-                  kind: 'user',
-                  item: contractingUser.id,
-                  extid: contractingUser.extid
-                }, {
-                  kind: 'contract',
-                  item: ct_id,
-                  extid: ctid
-                },
-                51, null);
-            })
-            .then(function(response) {
-              logger.log(req, res, {
-                type: 'audit',
-                data: 'Contract posted, waiting for approval'
-              });
-              callback(false, 'Contract posted, waiting for approval');
-            })
-            .catch(function(error) {
-              callback(true, error);
-            });
-        } catch (err) {
-          callback(true, err);
-        }
-      }
-    }
-  );
+function creating(req, res, callback){
+  pckContracts.create(req, res, _db, _funcs)
+  .then(function(response) {
+    callback(false, 'Contract posted, waiting for approval');
+  })
+  .catch(function(error) {
+    callback(true, error);
+  });
 }
+
 
 /**
 Accept a contract request
@@ -1642,6 +1436,9 @@ module.exports.pauseContracts = pauseContracts;
 module.exports.enableOneItem = enableOneItem;
 module.exports.resetContract = resetContract;
 module.exports.removeOneItem = removeOneItem;
-module.exports.createNotifAndAudit = createNotifAndAudit;
 module.exports.fetchContract = fetchContract;
-module.exports.mgmtSemanticRepo = mgmtSemanticRepo;
+
+
+module.exports.mgmtSemanticRepo = mgmtSemanticRepo; // ???  Call remove one item
+
+module.exports.createNotifAndAudit = createNotifAndAudit;
