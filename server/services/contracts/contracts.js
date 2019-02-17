@@ -99,10 +99,10 @@ function removeAllContract(id, token_uid, token_mail) {
   obj.token_mail = token_uid;
   pckContracts.removeAllContract(obj, _db, _funcs)
   .then(function(response) {
-    resolve(response);
+    return Promise.resolve(response);
   })
   .catch(function(err) {
-    reject(err);
+    return Promise.reject(err);
   });
 }
 
@@ -114,24 +114,13 @@ function removeAllContract(id, token_uid, token_mail) {
  * @return {Array} Contract requests
  */
 function contractFeeds(uid, callback) {
-  userOp.findOne({
-      _id: uid
-    }, {
-      hasContracts: 1
-    })
-    .then(function(response) {
-      var openContracts = [];
-      for (var i = 0; i < response.hasContracts.length; i++) {
-        if (!response.hasContracts[i].approved || response.hasContracts[i].inactive.length > 0) {
-          openContracts.push(response.hasContracts[i]);
-        }
-      }
-      openContracts = openContracts.length > 0 ? openContracts : false;
-      callback(false, openContracts);
-    })
-    .catch(function(err) {
-      callback(true, err);
-    });
+  pckContracts.contractFeeds(uid, _db)
+  .then(function(response) {
+    callback(false, response);
+  })
+  .catch(function(err) {
+    callback(true, err);
+  });
 }
 
 /**
@@ -142,32 +131,30 @@ function contractFeeds(uid, callback) {
  * @return {Object} Contract instance
  */
 function contractInfo(req, res, callback) {
-  var ctid = req.params.ctid;
-  var uid = req.body.decoded_token.uid;
-  var query = checkInput(ctid);
-  contractOp.findOne(query)
-    .then(function(response) {
-      var data = response.toObject();
-      if (!response) {
-        logger.log(req, res, {
-          type: 'warn',
-          data: "The contract with: " + JSON.stringify(query) + " could not be found"
-        });
-        callback(false, false);
-      } else if (!uidInContract(uid, data)) {
-        logger.log(req, res, {
-          type: 'warn',
-          data: "You are not part of the contract with ctid: " + data.ctid
-        });
-        res.status(401);
-        callback(false, "You are not part of the contract with ctid: " + data.ctid);
-      } else {
-        callback(false, response);
-      }
-    })
-    .catch(function(err) {
-      callback(true, err);
-    });
+  var obj = {};
+  obj.ctid = req.params.ctid;
+  obj.uid = req.body.decoded_token.uid;
+  obj.query = checkInput(obj.ctid, false);
+  pckContracts.contractInfo(obj, req, res, _db, _funcs)
+  .then(function(response) {
+    callback(false, response);
+  })
+  .catch(function(err) {
+    callback(true, err);
+  });
+}
+
+/*
+Get user contracts
+*/
+function fetchContract(req, res) {
+  pckContracts.fetchContract(req, res, _db, _funcs)
+  .then(function(response) {
+    return Promise.resolve(response);
+  })
+  .catch(function(error) {
+    return Promise.reject(error);
+  });
 }
 
 /*
@@ -624,90 +611,6 @@ function resetContract(cts, uid) {
     }
   });
 }
-
-/*
-Get user contracts
-*/
-function fetchContract(req, res) {
-  var id = mongoose.Types.ObjectId(req.params.id); // User id
-  var offset = req.query.offset;
-  var limit = req.query.limit;
-  var filter = req.query.filter;
-  var aggregation = [];
-  aggregation.push({
-    $match: {
-      "_id": id
-    }
-  });
-  aggregation.push({
-    $unwind: "$hasContracts"
-  });
-  if (Number(filter) !== 0) {
-    var filterOptions = [{
-        $match: {
-          "hasContracts.imForeign": true
-        }
-      },
-      {
-        $match: {
-          "hasContracts.imForeign": false
-        }
-      },
-      // { $match:{ $or:[{"hasContracts.imAdmin": false}, {"hasContracts.imForeign": false}] }},
-      {
-        $match: {
-          $or: [{
-            "hasContracts.approved": false
-          }, {
-            "hasContracts.inactive": {
-              $gt: 0
-            }
-          }]
-        }
-      }
-    ];
-    aggregation.push(filterOptions[Number(filter) - 1]);
-  }
-  aggregation.push({
-    $sort: {
-      "hasContracts.id": -1
-    }
-  });
-  if (Number(offset) !== 0) aggregation.push({
-    $skip: Number(offset)
-  });
-  aggregation.push({
-    $limit: Number(limit)
-  });
-  aggregation.push({
-    $project: {
-      "_id": 0,
-      "hasContracts": 1
-    }
-  });
-  return userOp.aggregate(aggregation)
-    .then(function(response) {
-      return contractOp.populate(response, {
-        path: "hasContracts.id"
-      });
-    })
-    .then(function(contracts) {
-      if (contracts.length === 0) {
-        contracts = [];
-        logger.log(req, res, {
-          type: 'warn',
-          data: 'No contracts for: ' + id
-        });
-        return Promise.resolve(contracts);
-      } else {
-        return Promise.resolve(contracts);
-      }
-    })
-    .catch(function(error) {
-      return Promise.reject(error);
-    });
-}
-
 
 // Private Functions -------------------------------------------------
 
@@ -1170,17 +1073,14 @@ module.exports.creating = creating;
 module.exports.accepting = accepting;
 module.exports.removing = removing;
 module.exports.removeAllContract = removeAllContract;
-
-
-
-
 module.exports.contractFeeds = contractFeeds;
 module.exports.contractInfo = contractInfo;
+module.exports.fetchContract = fetchContract;
+
 module.exports.pauseContracts = pauseContracts;
 module.exports.enableOneItem = enableOneItem;
 module.exports.resetContract = resetContract;
 module.exports.removeOneItem = removeOneItem;
-module.exports.fetchContract = fetchContract;
 
 
 module.exports.mgmtSemanticRepo = mgmtSemanticRepo; // ???  Call remove one item
