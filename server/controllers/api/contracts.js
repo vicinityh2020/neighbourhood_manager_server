@@ -5,7 +5,6 @@ var logger = require("../../middlewares/logBuilder");
 
 var sGetItems = require("../../services/items/get");
 var ctHelper = require("../../services/contracts/contracts.js");
-var ctChecks = require("../../services/contracts/contractChecks.js");
 
 /*
 Contracts --------------------------------------------------
@@ -98,7 +97,7 @@ exports.requestContract = function(req, res, next) {
   var data = req.body;
   var cid = req.body.decoded_token.orgid;
   var roles = req.body.decoded_token.roles;
-  ctChecks.postCheck(data, roles, cid, function(error, response, success){
+  ctHelper.postCheck(data, roles, cid, function(error, response, success){
     if(error){
       res.status(500);
       logger.log(req, res, {type: 'error', data: response});
@@ -112,7 +111,7 @@ exports.requestContract = function(req, res, next) {
       logger.log(req, res, {type: 'warn', data: response});
       res.json({error: error, message: response});
     } else {
-      ctChecks.isUnique(req, res, function(err, response){
+      ctHelper.isUnique(req, res, function(err, response){
         if(err) {
           res.status(500);
           logger.log(req, res, {type: 'error', data: response});
@@ -148,7 +147,7 @@ exports.manageContract = function(req, res, next) {
   var cid = req.body.decoded_token.orgid;
   if(req.body.type === 'delete'){
     id = req.params.id;
-    ctChecks.deleteCheck(id, uid, cid, function(error, response, success){
+    ctHelper.deleteCheck(id, uid, cid, function(error, response, success){
       if(error){
         res.status(500);
         logger.log(req, res, {type: 'error', data: response});
@@ -171,7 +170,7 @@ exports.manageContract = function(req, res, next) {
     });
   } else if(req.body.type === 'accept') {
     id = req.params.id;
-    ctChecks.acceptCheck(id, uid, cid, function(error, response, success){
+    ctHelper.acceptCheck(id, uid, cid, function(error, response, success){
       if(error){
         res.status(500);
         logger.log(req, res, {type: 'error', data: response});

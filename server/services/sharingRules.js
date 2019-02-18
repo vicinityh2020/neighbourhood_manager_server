@@ -7,7 +7,6 @@ var contractOp = require('../models/vicinityManager').contract;
 var logger = require('../middlewares/logBuilder');
 var sync = require('../services/asyncHandler/sync');
 var commServer = require('../services/commServer/request');
-var ctChecks = require('../services/contracts/contractChecks.js');
 var ctMain = require('../services/contracts/contracts.js');
 var audits = require('../services/audit/audit');
 
@@ -41,7 +40,7 @@ function changePrivacy(ids, userId, userMail, c_id, req, res){
         },
         function(allresult) {
           if(cont === ids.length){
-            ctChecks.checkContracts(userId, userMail)
+            ctMain.checkContracts(userId, userMail)
             .then(function(response){
             resolve('Success');
             })
@@ -163,10 +162,10 @@ function removeOneItem(oid, uid, cts_ctid, otherParams){
       return updateCommServer(cts_ctid, oid, {mail: token_mail});
     })
     .then(function(response){
-      return ctChecks.checkContracts(uid, token_mail);
+      return ctMain.checkContracts(uid, token_mail);
     })
     .then(function(response){
-      return ctChecks.contractValidity(cts_ctid, uid, token_mail);
+      return ctMain.contractValidity(cts_ctid, uid, token_mail);
     })
     .then(function(response){
       var logs = [];
@@ -244,7 +243,7 @@ function processingPrivacy(id, otherParams, callback){
     );
   })
   .then(function(response){
-    return ctChecks.contractValidity(cts_ctid, otherParams.uid, otherParams.mail);
+    return ctMain.contractValidity(cts_ctid, otherParams.uid, otherParams.mail);
   })
   .then(function(response){
     var removeCtSemRepo = [];

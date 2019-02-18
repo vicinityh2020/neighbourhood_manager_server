@@ -2,7 +2,6 @@
 
 var mongoose = require('mongoose');
 var logger = require("../../middlewares/logBuilder");
-var ctChecks = require("../../services/contracts/contractChecks.js");
 var ctHelper = require("../../services/contracts/contracts.js");
 var contractOp = require('../../models/vicinityManager').contract;
 var userOp = require('../../models/vicinityManager').user;
@@ -11,7 +10,7 @@ var userOp = require('../../models/vicinityManager').user;
 Create contracts
 */
 function createContract(req, res){
-  ctChecks.isUnique(req, res, function(err, response){
+  ctHelper.isUnique(req, res, function(err, response){
     if(err) {
       res.status(500);
       logger.log(req, res, {type: 'error', data: response});
@@ -37,23 +36,6 @@ function acceptContract(req, res){
     res.json({error: err, message: response});
   });
 }
-
-/*
-Modify contracts
-*/
-// function modifyContract(req, res){
-//   ctHelper.removing(req, res, function(err, response){
-//     if(err){
-//       logger.log(req, res, {type: 'error', data: response});
-//       res.json({error: err, message: response});
-//     } else {
-//       ctHelper.creating(req, res, function(err, response){
-//         if(err) logger.log(req, res, {type: 'error', data: response});
-//         res.json({error: err, message: response});
-//       });
-//     }
-//   });
-// }
 
 /*
 Delete contracts
@@ -128,7 +110,6 @@ module.exports.fetchContract = fetchContract;
 module.exports.removeContract = removeContract;
 module.exports.createContract = createContract;
 module.exports.acceptContract = acceptContract;
-// module.exports.modifyContract = modifyContract;
 module.exports.disableOneItem = disableOneItem;
 module.exports.enableOneItem = enableOneItem;
 module.exports.removeOneItem = removeOneItem;
