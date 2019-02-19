@@ -136,7 +136,8 @@ function contractInfo(req, res, callback) {
 Get user contracts
 */
 function fetchContract(req, res) {
-  return pckContracts.fetchContract(req, res, _db, _funcs)
+  var id = mongoose.Types.ObjectId(req.params.id); // User id
+  return pckContracts.fetchContract(id, req, res, _db, _funcs)
     .then(function(response) {
       return Promise.resolve(response);
     })
