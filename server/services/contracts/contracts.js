@@ -154,10 +154,12 @@ When an item is updated we need to put them in "hold" the contracts
 4 - Create notifications and logs
 */
 function pauseContracts(req, res, ctData) {
-  return pckContracts.pauseContracts(ctData, req, res, _db, _funcs, function(err, response){
-      if(err) return Promise.reject(response);
-      return Promise.resolve(response);
+  return new Promise( function(resolve, reject){
+    pckContracts.pauseContracts(ctData, req, res, _db, _funcs, function(err, response){
+      if(err) reject(response);
+      resolve(response);
     });
+  });
 }
 
 /*
@@ -202,10 +204,12 @@ Restart contract, when a service gets updated
 3 - Create notifications and logs
 */
 function resetContract(cts, uid) {
-  return pckContracts.resetContract(cts, uid, _db, _funcs, function(err, response){
-      if(err) return Promise.reject(response);
-      return Promise.resolve(response);
+  return new Promise( function(resolve, reject){
+    pckContracts.resetContract(cts, uid, _db, _funcs, function(err, response){
+      if(err) reject(response);
+      resolve(response);
     });
+  });
 }
 
 
@@ -278,10 +282,12 @@ Checks if a user can be pulled from a contract
 Is the case of user is no contract admin and has no items in it
 */
 function checkContracts(userId, userMail) {
-  return pckContracts.checkContracts(userId, userMail, _db, _funcs, function(err, response){
-      if(err) return Promise.reject(response);
-      return Promise.resolve(response);
+  return new Promise( function(resolve, reject){
+    pckContracts.checkContracts(userId, userMail, _db, _funcs, function(err, response){
+      if(err) reject(response);
+      resolve(response);
     });
+  });
 }
 
 /*
