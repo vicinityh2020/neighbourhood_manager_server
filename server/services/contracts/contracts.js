@@ -85,7 +85,7 @@ function removeAllContract(id, token_uid, token_mail) {
   obj.queryId = checkInput(id, false);
   obj.token_uid = token_uid;
   obj.token_mail = token_uid;
-  pckContracts.removeAllContract(obj, _db, _funcs)
+  return pckContracts.removeAllContract(obj, _db, _funcs)
     .then(function(response) {
       return Promise.resolve(response);
     })
@@ -136,7 +136,7 @@ function contractInfo(req, res, callback) {
 Get user contracts
 */
 function fetchContract(req, res) {
-  pckContracts.fetchContract(req, res, _db, _funcs)
+  return pckContracts.fetchContract(req, res, _db, _funcs)
     .then(function(response) {
       return Promise.resolve(response);
     })
@@ -153,7 +153,7 @@ When an item is updated we need to put them in "hold" the contracts
 4 - Create notifications and logs
 */
 function pauseContracts(req, res, ctData) {
-  pckContracts.pauseContracts(ctData, req, res, _db, _funcs)
+  return pckContracts.pauseContracts(ctData, req, res, _db, _funcs)
     .then(function(response) {
       return Promise.resolve(response);
     })
@@ -170,7 +170,7 @@ Reactivate ONE item in ONE contract after update
 4 - Create notifications and logs
 */
 function enableOneItem(req, res) {
-  pckContracts.enableOneItem(req, res, _db, _funcs)
+  return pckContracts.enableOneItem(req, res, _db, _funcs)
     .then(function(response) {
       return Promise.resolve(response);
     })
@@ -188,7 +188,7 @@ Remove ONE item from contract
 5 - Create notifications and logs (Deleting one function)
 */
 function removeOneItem(req, res) {
-  pckContracts.removeOneItem(req, res, _db, _funcs)
+  return pckContracts.removeOneItem(req, res, _db, _funcs)
     .then(function(response) {
       return Promise.resolve(response);
     })
@@ -204,7 +204,7 @@ Restart contract, when a service gets updated
 3 - Create notifications and logs
 */
 function resetContract(cts, uid) {
-  pckContracts.resetContract(cts, uid, _db, _funcs)
+  return pckContracts.resetContract(cts, uid, _db, _funcs)
     .then(function(response) {
       return Promise.resolve(response);
     })
@@ -221,7 +221,7 @@ function resetContract(cts, uid) {
  * @return Object{result}
  */
 function mgmtSemanticRepo(id, action) {
-  pckContracts.mgmtSemanticRepo(id, action, _db, _funcs)
+  return pckContracts.mgmtSemanticRepo(id, action, _db, _funcs)
     .then(function(response) {
       return Promise.resolve(response);
     })
@@ -283,7 +283,7 @@ Checks if a user can be pulled from a contract
 Is the case of user is no contract admin and has no items in it
 */
 function checkContracts(userId, userMail) {
-  pckContracts.checkContracts(userId, userMail, _db, _funcs)
+  return pckContracts.checkContracts(userId, userMail, _db, _funcs)
     .then(function(response) {
       return Promise.resolve(response);
     })
@@ -297,7 +297,7 @@ Checks if a contract has to be removed
 Case one party has no items in it
 */
 function contractValidity(ctids, uid, mail) {
-  pckContracts.contractValidity(ctids, uid, mail, _db, _funcs)
+  return pckContracts.contractValidity(ctids, uid, mail, _db, _funcs)
     .then(function(response) {
       return Promise.resolve(response);
     })
