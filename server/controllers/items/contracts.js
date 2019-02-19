@@ -3,8 +3,6 @@
 var mongoose = require('mongoose');
 var logger = require("../../middlewares/logBuilder");
 var ctHelper = require("../../services/contracts/contracts.js");
-var contractOp = require('../../models/vicinityManager').contract;
-var userOp = require('../../models/vicinityManager').user;
 
 /*
 Create contracts
@@ -93,7 +91,6 @@ function removeOneItem(req, res){
 Get contract
 */
 function fetchContract(req, res){
-  var parsedData = {};
   ctHelper.fetchContract(req, res)
   .then(function(response){
     res.json({error: false, message: response});
