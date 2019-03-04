@@ -113,11 +113,16 @@ describe('Full test scenario', function(){
     it('Find the contract put in hold', getContractReqCtidUser1);
     it('Re-accept contract on hold', acceptContractUser1);
     it('Delete a contract', deleteContract);
+    // it('Delete a contract', deleteContractOperational);
     it('Not found contract req', notFoundContract);
     // TODO debug('If next line fails consider race condition caused by test suite - fails only sometimes');
     // it('Request a contract (MONGO ID)', postContract);
     // it('Find contract requests (MONGO ID)', getContractReq);
     // it('Accept a contract (MONGO ID)', acceptContractUser2);
+  });
+  describe('Operational endpoints...', function(){
+    it('Disable device', disableOperational);
+    it('Enable device', enableOperational);
   });
   describe('Remove organisations...', function(){
     it('Remove organisation-1', removeOrganisation1);
@@ -737,6 +742,40 @@ function enabling(token, type, done){
     });
   }
 
+function enableOperational(done){
+  var data = {
+                "o_id": oidDev,
+                "typeOfItem": "device",
+                "status": "enabled"
+              };
+  chai.request(server)
+    .put('/operational/items/enable')
+    .set('x-access-token', token1)
+    .send(data)
+    .end(function(err, res){
+      res.should.have.status(200);
+      res.body.should.be.a('object');
+      done();
+    });
+  }
+
+function disableOperational(done){
+  var data = {
+                "o_id": oidDev,
+                "typeOfItem": "device",
+                "status": "disabled"
+              };
+  chai.request(server)
+    .put('/operational/items/disable')
+    .set('x-access-token', token1)
+    .send(data)
+    .end(function(err, res){
+      res.should.have.status(200);
+      res.body.should.be.a('object');
+      done();
+    });
+  }
+
 function updateDeviceVisibility(done){
   visibilityUpdate(token1, "device", done);
 }
@@ -1134,3 +1173,19 @@ function notFindFriends(done){
           done();
         });
       }
+
+      // function deleteContractOperational(done){
+      //   var data = {
+      //     contracts: [{extid: ctid}]
+      //   };
+      //   chai.request(server)
+      //     .post('/operational/contracts/remove')
+      //     .set('x-access-token', token)
+      //     .send(data)
+      //     .end(function(err, res){
+      //       res.should.have.status(200);
+      //       res.body.should.be.a('object');
+      //       res.body.message.message.should.be.a('array');
+      //       done();
+      //     });
+      //   }

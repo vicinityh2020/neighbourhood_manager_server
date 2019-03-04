@@ -23,21 +23,26 @@ function updateManyItems(req, res, callback){
     sync.forEachAll(items,
     function(value, allresult, next, otherParams) {
       value.multi = true;
-        if(value.status === 'enabled'){
-          enableItem(req, res, function(value, error, success, message) {
-            allresult.push({value: value, error: error, success: success, message: message});
-            next();
-          }, value);
-        }else if(value.status === 'disabled'){
-          disableItem(req, res, function(value, error, success, message) {
-            allresult.push({value: value, error: error, success: success, message: message});
-            next();
-          }, value);
-        } else {
-          updateItem(req, res, function(value, error, success, message) {
-            allresult.push({value: value, error: error, success: success, message: message});
-            next();
-          }, value);
+        try{
+          value.decoded_token = req.body.decoded_token;
+          if(value.status === 'enabled'){
+            enableItem(req, res, function(value, error, success, message) {
+              allresult.push({value: value, error: error, success: success, message: message});
+              next();
+            }, value);
+          }else if(value.status === 'disabled'){
+            disableItem(req, res, function(value, error, success, message) {
+              allresult.push({value: value, error: error, success: success, message: message});
+              next();
+            }, value);
+          } else {
+            updateItem(req, res, function(value, error, success, message) {
+              allresult.push({value: value, error: error, success: success, message: message});
+              next();
+            }, value);
+          }
+        } catch(err) {
+          logger.log(req, res, {type: 'error', data: err});
         }
       },
       function(allresult) {
@@ -61,11 +66,13 @@ Enable items
 function enableItem(req, res, callback, other){
   var data = req.body;
   if(other && other.multi) data = other;
-  var cid = req.body.decoded_token.cid;
-  var c_id = req.body.decoded_token.orgid;
-  var userMail = req.body.decoded_token.sub;
-  var userId = mongoose.Types.ObjectId(req.body.decoded_token.uid);
-  var roles = req.body.decoded_token.roles;
+  if(!data.status) data.status = 'enabled';
+  if(!data.accessLevel) data.accessLevel = 0;
+  var cid = data.decoded_token.cid;
+  var c_id = data.decoded_token.orgid;
+  var userMail = data.decoded_token.sub;
+  var userId = mongoose.Types.ObjectId(data.decoded_token.uid);
+  var roles = data.decoded_token.roles;
   var oid;
   var o_id;
   var idQuery = checkId(data.o_id);
@@ -126,12 +133,14 @@ Disable items
 function disableItem(req, res, callback, other){
   var data = req.body;
   if(other && other.multi) data = other;
-  var cid = req.body.decoded_token.cid;
-  var c_id = req.body.decoded_token.orgid;
-  var userMail = req.body.decoded_token.sub;
+  if(!data.status) data.status = 'disabled';
+  if(!data.accessLevel) data.accessLevel = 0;
+  var cid = data.decoded_token.cid;
+  var c_id = data.decoded_token.orgid;
+  var userMail = data.decoded_token.sub;
   // var userId = mongoose.Types.ObjectId(req.body.decoded_token.uid);
   var userId;
-  var roles = req.body.decoded_token.roles;
+  var roles = data.decoded_token.roles;
   var oid;
   var o_id;
   var idQuery = checkId(data.o_id);
@@ -198,11 +207,11 @@ Update items
 function updateItem(req, res, callback, other){
   var data = req.body;
   if(other && other.multi) data = other;
-  var cid = req.body.decoded_token.cid;
-  var c_id = req.body.decoded_token.orgid;
-  var userMail = req.body.decoded_token.sub;
-  var userId = mongoose.Types.ObjectId(req.body.decoded_token.uid);
-  var roles = req.body.decoded_token.roles;
+  var cid = data.decoded_token.cid;
+  var c_id = data.decoded_token.orgid;
+  var userMail = data.decoded_token.sub;
+  var userId = mongoose.Types.ObjectId(data.decoded_token.uid);
+  var roles = data.decoded_token.roles;
   var oid;
   var o_id;
   var idQuery = checkId(data.o_id);
