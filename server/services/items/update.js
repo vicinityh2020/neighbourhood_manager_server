@@ -161,7 +161,11 @@ function disableItem(req, res, callback, other){
       callback(o_id, true, false, canChange.continue);
     }
     if(canChange.continue){
-      commServer.callCommServer({}, 'users/' + oid + '/groups/' + cid + '_ownDevices', 'DELETE')
+      itemOp.findOne({ _id : o_id}, {status:1})
+      .then(function(response){
+        if(response.status === 'enabled') return Promise.reject("Already enabled!");
+        return commServer.callCommServer({}, 'users/' + oid + '/groups/' + cid + '_ownDevices', 'DELETE');
+      })
       .then(function(response){ return manageUserItems(oid, o_id, userMail, userId, 'disabled'); })
       .then(function(response){
          var query = {status: data.status, accessLevel: data.accessLevel};
@@ -190,10 +194,15 @@ function disableItem(req, res, callback, other){
           logger.log(req, res, {type: 'audit', data:{user: userMail, action: 'DisableItem', item: o_id }});
           callback(o_id, false, true, 'disabled');
         })
-      .catch(function(err){
-        logger.log(req, res, {type: 'error', data: err});
-        callback(o_id, true, false, err);
-      });
+        .catch(function(err){
+          if(err === "Already enabled!"){
+            logger.log(req, res, {type: 'warn', data: "Already enabled!"});
+            callback(o_id, false, false, "Already enabled!");
+          } else {
+            logger.log(req, res, {type: 'error', data: err});
+            callback(o_id, true, false, err);
+          }
+        });
     } else {
       logger.log(req, res, {type: 'warn', data: 'User not authorized'});
       callback(o_id, false, false, 'User not authorized');

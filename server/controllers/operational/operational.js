@@ -13,13 +13,14 @@ var ctHelper = require("../../services/operational/remove.js");
  * @return Confirmation
  */
 operational.enable = function(req, res){
-  if(!req.body.o_id || !req.body.typeOfItem){
+  var oid = req.body.o_id || req.body.oid;
+  if(!oid || !req.body.typeOfItem){
     res.status(400);
     logger.log(req, res, {type: 'warn', data: "Missing data"});
     res.json({error: false, message: "Data is missing..."});
   } else {
-    sUpdate.enableItem(req, res, function(err, response, success){
-      res.json({error: err, message: response});
+    sUpdate.enableItem(req, res, function(oid, err, success, msg){
+      res.json({error: err, message: msg, success: success, oid: oid});
     });
   }
 };
@@ -31,13 +32,14 @@ operational.enable = function(req, res){
  * @return Confirmation
  */
 operational.disable = function(req, res){
-  if(!req.body.o_id || !req.body.typeOfItem){
+  var oid = req.body.o_id || req.body.oid;
+  if(!oid || !req.body.typeOfItem){
     res.status(400);
     logger.log(req, res, {type: 'warn', data: "Missing data"});
     res.json({error: false, message: "Data is missing..."});
   } else {
-    sUpdate.disableItem(req, res, function(err, response, success){
-      res.json({error: err, message: response});
+    sUpdate.disableItem(req, res, function(oid, err, success, msg){
+      res.json({error: err, message: msg, success: success, oid: oid});
     });
   }
 };
