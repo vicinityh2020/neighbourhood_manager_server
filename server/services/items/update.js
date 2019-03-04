@@ -92,7 +92,11 @@ function enableItem(req, res, callback, other){
       callback(o_id, true, false, canChange.continue);
     }
     if(canChange.continue){
-      commServer.callCommServer({}, 'users/' + oid + '/groups/' + cid + '_ownDevices', 'POST')
+      itemOp.findOne({ _id : o_id}, {status:1})
+      .then(function(response){
+        if(response.status === 'enabled') return Promise.reject("Already enabled!");
+        return commServer.callCommServer({}, 'users/' + oid + '/groups/' + cid + '_ownDevices', 'POST');
+      })
       .then(function(response){ return manageUserItems(oid, o_id, userMail, userId, 'enabled'); })
       .then(function(response){
          var query = {status: data.status, accessLevel: data.accessLevel};
@@ -117,8 +121,13 @@ function enableItem(req, res, callback, other){
         callback(o_id, false, true, 'enabled');
       })
       .catch(function(err){
-        logger.log(req, res, {type: 'error', data: err});
-        callback(o_id, true, false, err);
+        if(err === "Already enabled!"){
+          logger.log(req, res, {type: 'warn', data: "Already enabled!"});
+          callback(o_id, false, false, "Already enabled!");
+        } else {
+          logger.log(req, res, {type: 'error', data: err});
+          callback(o_id, true, false, err);
+        }
       });
     } else {
       logger.log(req, res, {type: 'warn', data: 'User not authorized'});
@@ -163,7 +172,7 @@ function disableItem(req, res, callback, other){
     if(canChange.continue){
       itemOp.findOne({ _id : o_id}, {status:1})
       .then(function(response){
-        if(response.status === 'enabled') return Promise.reject("Already enabled!");
+        if(response.status === 'disabled') return Promise.reject("Already disabled!");
         return commServer.callCommServer({}, 'users/' + oid + '/groups/' + cid + '_ownDevices', 'DELETE');
       })
       .then(function(response){ return manageUserItems(oid, o_id, userMail, userId, 'disabled'); })
@@ -195,9 +204,9 @@ function disableItem(req, res, callback, other){
           callback(o_id, false, true, 'disabled');
         })
         .catch(function(err){
-          if(err === "Already enabled!"){
-            logger.log(req, res, {type: 'warn', data: "Already enabled!"});
-            callback(o_id, false, false, "Already enabled!");
+          if(err === "Already disabled!"){
+            logger.log(req, res, {type: 'warn', data: "Already disabled!"});
+            callback(o_id, false, false, "Already disabled!");
           } else {
             logger.log(req, res, {type: 'error', data: err});
             callback(o_id, true, false, err);
