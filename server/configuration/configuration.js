@@ -19,7 +19,7 @@ config.baseHref = process.env.SERVER_UI_BASE_HREF;
 // Vicinity services dir
 config.vicinityServicesDir = process.env.vicinityServicesDir;
 // SSL certificates
-config.ssl = process.env.SERVER_SSL_CERT && process.env.SERVER_SSL_KEY;
+config.ssl = process.env.SERVER_SSL_ENABLE === "true";
 config.cert = process.env.SERVER_SSL_CERT;
 config.key = process.env.SERVER_SSL_KEY;
 // Logs files
