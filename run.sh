@@ -37,6 +37,10 @@ Where:
     esac
   done
 
+echo CLEANING OLD RUNNING CONTAINER...
+  docker kill ${NAME} >/dev/null 2>&1
+  docker rm ${NAME} >/dev/null 2>&1
+
 echo RUNNING THE CONTAINER...
 
 # MODIFY FROM HERE WITH YOUR SETTING
@@ -58,9 +62,9 @@ KEY=/etc/letsencrypt/live/${DOMAIN}/privkey.pem
 # ssl certificate (OPTIONAL)
 CERT=/etc/letsencrypt/live/${DOMAIN}/fullchain.pem
 
-# Comment 1st and 2nd --mount if no SSL
-# Comment 3rd --mount if no certificate used with mongo
-# Comment -v if you don't want to have the logs in your local machine
+# Remove 1st and 2nd --mount if no SSL
+# Remove 3rd --mount if no certificate used with mongo
+# Remove -v if you don't want to have the logs in your local machine
 docker run -d -p $PORT:3000 \
         -it \
         --rm \
