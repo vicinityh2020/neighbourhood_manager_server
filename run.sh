@@ -17,6 +17,7 @@ Where:
   PORT=3000
   DOMAIN=false
 
+
   # Get configuration
   while getopts 'hd:p:d:n:' OPTION; do
     case "$OPTION" in
@@ -49,7 +50,7 @@ echo RUNNING THE CONTAINER...
 # the script is called
 
 # logs path (OPTIONAL)
-LOG_DIR=~/${NAME}_logs
+LOG_DIR=~/docker_data/logs/${NAME}
 # mongo path to the certificate (OPTIONAL)
 MONGO_CERT=~/certificateMongo/ca.pem
 # ssl private key (OPTIONAL)
@@ -69,3 +70,5 @@ docker run -d -p $PORT:3000 \
         --mount type=bind,source=${MONGO_CERT},target=/var/ca.pem,readonly \
         -v ${LOG_DIR}:/app/logs \
         ${NAME}:latest
+
+  echo "Success! Logs stored under ${LOG_DIR}"

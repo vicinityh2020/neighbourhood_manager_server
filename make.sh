@@ -20,7 +20,7 @@ GIT_MAIL=false
 WORKDIR=false
 
 # Get configuration
-while getopts 'hd:sd:p:e:d:m:w:' OPTION; do
+while getopts 'hd:e:d:m:w:' OPTION; do
   case "$OPTION" in
     h)
       echo "$USAGE"
@@ -44,18 +44,18 @@ done
 # Set WORKDIR
 if [ ${WORKDIR} == false ]; then
   WORKDIR=~/vicinity_nm_api
-else
+fi
 
 # Check mandatory arguments and set WORKDIR
 if [ ${GIT_MAIL} == false ]; then
   echo USING LOCAL CONFIG...
 else
   echo USING GIT CONFIG...
-  # cd ${WORKDIR} && git secret tell development@bavenir.eu
-  # cd ${WORKDIR} && git secret tell api_vicinity_devone@bavenir.eu
-  # cd ${WORKDIR} && git secret tell api_vicinity_devtwo@bavenir.eu
-  cd ${WORKDIR} && git secret tell ${GIT_MAIL}
-  cd ${WORKDIR} && git secret reveal
+  # cd ${WORKDIR} && git-secret tell development@bavenir.eu
+  # cd ${WORKDIR} && git-secret tell api_vicinity_devone@bavenir.eu
+  # cd ${WORKDIR} && git-secret tell api_vicinity_devtwo@bavenir.eu
+  cd ${WORKDIR} && git-secret tell ${GIT_MAIL}
+  cd ${WORKDIR} && git-secret reveal
 fi
 
 # Ensure configuration was created
@@ -72,6 +72,6 @@ docker kill ${NAME} >/dev/null 2>&1
 docker rm ${NAME} >/dev/null 2>&1
 docker rmi ${NAME} >/dev/null 2>&1
 echo BUILDING THE NEW CONTAINER...
-docker build -f ${WORKDIR}/Dockerfile -t --build-arg env=${ENV} ${NAME} ${WORKDIR}
+docker build -f ${WORKDIR}/Dockerfile --build-arg myenv=${ENV} -t ${NAME} ${WORKDIR}
 # Finish and close
 echo DONE!

@@ -1,7 +1,8 @@
 FROM keymetrics/pm2:8-jessie
 
-# Get arguments
-ARG env
+# Get build-arg and assign to runtime-env
+ARG myenv
+ENV my_env $myenv
 
 # Bundle APP files
 COPY server /app/server/
@@ -26,5 +27,5 @@ EXPOSE 3000
 # Show current folder structure in logs
 # RUN ls -al -R
 
-# Run command
-CMD [ "pm2-runtime", "start", "--env", $env, "vcnt_server.config.js" ]
+# Run command with env
+CMD pm2-runtime start --env $my_env vcnt_server.config.js
