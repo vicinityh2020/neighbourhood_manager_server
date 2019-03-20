@@ -2,8 +2,8 @@
 USAGE="$(basename "$0") [-h] [-e env -n name -m auth-mail -w workdir]
  -- Builds app docker on linux/mac
  -- Examples
- ./make.sh -p 3000 -e production -d www.example.com -m my@gitsecret.mail
- ./make.sh -p 3000 -e development -d www.example.com
+ ./make.sh -p 3000 -e production -m my@gitsecret.mail
+ ./make.sh -p 3000 -e development
 Where:
   Flags:
     -h  shows help
