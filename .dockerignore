@@ -7,3 +7,5 @@ LICENSE
 
 # Secrets
 *.secret
+
+server/node_modules

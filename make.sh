@@ -4,6 +4,7 @@ USAGE="$(basename "$0") [-h] [-e env -n name -m auth-mail -w workdir]
  -- Examples
  ./make.sh -p 3000 -e production -m my@gitsecret.mail
  ./make.sh -p 3000 -e development
+ ./make.sh -e local -w .
 Where:
   Flags:
     -h  shows help
