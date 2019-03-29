@@ -204,32 +204,23 @@ Receives following parameters:
 function getAllItems(cid, type, offset, filterNumber, filterOntology, callback) {
   var friends = [];
   if(!type) type = "device";
-  if(!filterNumber) filterNumber = 4;
+  if(!filterNumber) filterNumber = 0;
   userAccountOp.findOne(cid, {knows: 1}).lean()
   .then(function(data){
     var query = {
       typeOfItem: type,
-      $or :[ { accessLevel: 2 }, { 'cid.id': cid }]
     };
     if(data.knows != null){
-        getIds(data.knows, friends);
-        query = {
-          typeOfItem: type,
-          $or :[
-          { $and: [ { 'cid.id': {$in: friends}}, { accessLevel: 1 } ] },
-          { accessLevel: 2 },
-          { 'cid.id': cid }
-          ]
-        };
-      }
+      getIds(data.knows, friends);
+    }
     // Filters oids based on ontology matches to the user selection
     if(filterOntology.length > 1) query["info.type"] = {$in: filterOntology};
-    query = updateQueryWithFilterNumber(query, filterNumber, cid);
+    query = updateQueryWithFilterNumber(query, filterNumber, cid, friends);
     return itemOp.find(query, {hasAudits: 0, info: 0})
-          .populate('cid.id','name cid')
-          .sort({name:1})
           .skip(Number(offset))
           .limit(12)
+          .sort({name:1})
+          .populate('cid.id','name cid')
           .lean();
     })
     .then(function(data){
@@ -357,13 +348,15 @@ function getItemWithAdd(oid, cid, callback) {
 
 // Private functions
 
-function updateQueryWithFilterNumber(q, fN, cid){
-  switch (Number(fN)) {
+function updateQueryWithFilterNumber(q, fN, cid, friends){
+  switch (fN) {
       case 0:
+          q['cid.id'] = cid;
           q.status = "disabled";
           break;
       case 1:
           q.accessLevel = 0;
+          q['cid.id'] = cid;
           q.status = "enabled";
           break;
       case 2:
@@ -378,12 +371,14 @@ function updateQueryWithFilterNumber(q, fN, cid){
           q['cid.id'] = cid;
           break;
       case 5:
+          q.$and = [ { 'cid.id': {$in: friends}}, { accessLevel: 1 } ];
           q.accessLevel = 1;
           break;
       case 6:
           q.accessLevel = 2;
           break;
       case 7:
+          q.$or = [ { accessLevel: 2 }, { 'cid.id': cid }];
           break;
       case 8:
           q['hasContracts.contractingParty'] = cid;
