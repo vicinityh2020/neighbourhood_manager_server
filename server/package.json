@@ -5,7 +5,7 @@
   "description": "Information service for VICITNITY neighbourhood manager",
   "scripts": {
     "start": "nodemon ./bin/www",
-    "test": "env=test VCNT_MNGR_DB=mongodb://test:test@development.bavenir.eu:27017/vicinity_neighbourhood_manager_test nyc mocha --exit './test/**/*.spec.js'",
+    "test": "env=test VCNT_MNGR_DB=mongodb://test:test@development.bavenir.eu:27017/vicinity_neighbourhood_manager_test?ssl=true nyc mocha --exit './test/**/*.spec.js'",
     "complexity": "grunt complexity:modules",
     "complexity_detail": "grunt complexity:functions",
     "code_composition": "grunt slocAll"
