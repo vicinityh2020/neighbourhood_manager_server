@@ -84,7 +84,6 @@ else
           --name ${NAME} \
           --mount type=bind,source=${KEY},target=/etc/letsencrypt/privkey.pem,readonly \
           --mount type=bind,source=${CERT},target=/etc/letsencrypt/fullchain.pem,readonly \
-          --mount type=bind,source=${MONGO_CERT},target=/var/ca.pem,readonly \
           -v ${LOG_DIR}:/app/logs \
           ${NAME}:latest
 
