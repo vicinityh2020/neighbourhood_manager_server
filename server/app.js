@@ -109,7 +109,7 @@ app.use(function(err, req, res, next) {
 
 // CONNECTING to MONGO
 var options = {};
-options.useNewUrlParser = true;
+options.useMongoClient = true;
 options.ssl = true;
 options.sslValidate = true;
 options.sslCA = file.readFileSync(config.mongoCA);

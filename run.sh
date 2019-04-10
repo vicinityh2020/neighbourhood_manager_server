@@ -69,7 +69,7 @@ else
   # logs path (OPTIONAL)
   LOG_DIR=~/docker_data/logs/${NAME}
   # mongo path to the certificate (OPTIONAL)
-  MONGO_CERT=~/certificateMongo/ca.pem
+  MONGO_CERT=~/certificateMongo/
   # ssl private key (OPTIONAL)
   KEY=/etc/letsencrypt/live/${DOMAIN}/privkey.pem
   # ssl certificate (OPTIONAL)
@@ -84,8 +84,8 @@ else
           --name ${NAME} \
           --mount type=bind,source=${KEY},target=/etc/letsencrypt/privkey.pem,readonly \
           --mount type=bind,source=${CERT},target=/etc/letsencrypt/fullchain.pem,readonly \
-          --mount type=bind,source=~/certificateMongo/mongoCA.crt,target=/mongo/ssl/mongoCA.crt,readonly \
-          --mount type=bind,source=~/certificateMongo/mongo.pem,target=/mongo/ssl/mongo.pem,readonly \
+          --mount type=bind,source=${MONGO_CERT}mongoCA.crt,target=/mongo/ssl/mongoCA.crt,readonly \
+          --mount type=bind,source=${MONGO_CERT}mongo.pem,target=/mongo/ssl/mongo.pem,readonly \
           -v ${LOG_DIR}:/app/logs \
           ${NAME}:latest
 
