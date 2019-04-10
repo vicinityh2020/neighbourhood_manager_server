@@ -12,6 +12,7 @@ if(process.env.ELASTIC_APM_USE === "true") var apm = require('elastic-apm-node')
 var express = require('express');
 var cors = require('cors');
 var path = require('path');
+var file = require('fs');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
@@ -107,7 +108,16 @@ app.use(function(err, req, res, next) {
 // ENDING MIDDLEWARES ================
 
 // CONNECTING to MONGO
-mongoose.connect(process.env.VCNT_MNGR_DB, { useMongoClient: true }, function(error){
+var options = {};
+options.useNewUrlParser = true;
+options.ssl = true;
+options.sslValidate = true;
+options.sslCA = file.readFileSync(config.mongoCA);
+options.sslKey = file.readFileSync(config.mongoCert);
+options.sslCert = file.readFileSync(config.mongoCert);
+options.sslPass = config.mongoPass;
+
+mongoose.connect(process.env.VCNT_MNGR_DB, options, function(error){
   if (error){
     logger.error("VMModel: Couldn't connect to data source!" + error);
   } else {

@@ -29,6 +29,14 @@ config.profilerLog = process.env.profilerLog;
 config.maxPayload = process.env.SERVER_MAX_PAYLOAD || "10mb";
 
 /*
+MongoDB
+*/
+config.mongoUri = process.env.VCNT_MNGR_DB;
+config.mongoCA = process.env.MONGO_SSL_CA;
+config.mongoCert = process.env.MONGO_SSL_CERT;
+config.mongoPass = process.env.MONGO_SSL_PASS;
+
+/*
 COMMUNICATION SERVER
 */
 // Token Secret
