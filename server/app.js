@@ -112,10 +112,12 @@ var options = {};
 options.useMongoClient = true;
 options.ssl = true;
 options.sslValidate = true;
-options.sslCA = file.readFileSync(config.mongoCA);
-options.sslKey = file.readFileSync(config.mongoCert);
-options.sslCert = file.readFileSync(config.mongoCert);
-options.sslPass = config.mongoPass;
+if( config.mongoCA && config.mongoCert ){
+  options.sslCA = file.readFileSync(config.mongoCA);
+  options.sslKey = file.readFileSync(config.mongoCert);
+  options.sslCert = file.readFileSync(config.mongoCert);
+  options.sslPass = config.mongoPass;
+}
 
 mongoose.connect(process.env.VCNT_MNGR_DB, options, function(error){
   if (error){
