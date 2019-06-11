@@ -8,6 +8,7 @@ var sGetNodeItems = require('../../services/nodes/get');
 var commServer = require('../../services/commServer/request');
 
 var nodeOp = require('../../models/vicinityManager').node;
+var itemOp = require('../../models/vicinityManager').item;
 var userAccountOp = require('../../models/vicinityManager').userAccount;
 
 // Public functions
@@ -47,6 +48,42 @@ function searchItems(req, res){
   sSearch.searchItems(data, function(err, response){
     res.json({error: err, message: response});
   });
+}
+
+/**
+ * Search for items
+ *
+ * @param {Array} oids
+ *
+ * @return {Array} TDs
+ *
+ */
+function td(req, res){
+  if(!req.body.objects){
+    res.status(400);
+    logger.log(req, res, {type: 'warn', data: "Missing data"});
+    res.json({error: false, message: "Data is missing..."});
+  } else {
+    var data = req.body.objects;
+    var oids = [];
+    for( var i = 0, l = data.length; i < l; i++){
+      oids.push(data[i].oid);
+    }
+    itemOp.aggregate([
+      {$match: {oid: {$in:oids} }},
+      {$project: {"info": "$info"}}
+    ])
+    .then(function(response){
+      var result = [];
+      for(var i = 0, l = response.length; i < l; i++){
+        result.push(response[i].info);
+      }
+      res.json({error: false, message: { thingDescriptions: result} });
+    })
+    .catch(function(error){
+      res.json({error: true, message: error});
+    });
+  }
 }
 
 /**
@@ -267,6 +304,7 @@ function neighbourhood(req, res){
 
 module.exports.registration = registration;
 module.exports.searchItems = searchItems;
+module.exports.td = td;
 module.exports.deleteItems = deleteItems;
 module.exports.enableItems = enableItems;
 module.exports.disableItems = disableItems;

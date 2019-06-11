@@ -9,6 +9,7 @@ router
 // items
 .get('/items/:oid', controllers.neighbourhood)
 .post('/items/register', controllers.registration)
+.post('/items/td', controllers.td)
 .post('/items/searchItems', controllers.searchItems)
 .post('/items/remove', controllers.deleteItems)
 .post('/items/enable', controllers.enableItems)
