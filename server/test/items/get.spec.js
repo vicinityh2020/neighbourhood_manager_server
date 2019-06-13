@@ -84,20 +84,6 @@ function loginSuccess(done){
       });
   }
 
-  function getAllItems(done){
-    chai.request(server)
-      .post('/items/' + cid  + '/organisation/allItems')
-      .set('x-access-token', token)
-      .end(function(err, res){
-        res.should.have.status(200);
-        res.body.should.be.a('object');
-        res.body.should.have.property('message');
-        res.body.message.should.be.a('array');
-        logger.debug("There are " + res.body.message.length + " items");
-        done();
-      });
-  }
-
   function getCountItems(done){
     chai.request(server)
       .get('/items/count/false')

@@ -66,7 +66,7 @@ function getAllItems(req, res) {
   var type = req.body.type;
   var offset = req.body.offset;
   var filterNumber = req.body.filterNumber;
-  var filterOntology = typeof req.body.filterOntology !== 'undefined' ? req.body.filterOntology : [];
+  var filterOntology = req.body.filterOntology;
   sGet.getAllItems(oid, type, offset, filterNumber, filterOntology, function(err, response){
     if(err) logger.log(req, res, {type: 'error', data: response});
     res.json({error: err, message: response});
