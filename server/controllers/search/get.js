@@ -74,7 +74,8 @@ var sGet = require("../../services/search/get");
   If above method fails, gets file from backup stored in code
   */
   function getOntology(req, res, next) {
-    sGet.getOntology()
+    var type = req.query.type;
+    sGet.getOntology(type)
     .then(function(response){
       res.json({error: false, message: response});
     })

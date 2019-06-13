@@ -8,6 +8,8 @@ var userAccountOp = require('../../models/vicinityManager').userAccount;
 var logger = require("../../middlewares/logBuilder");
 var itemProperties = require("../../services/items/additionalItemProperties");
 var commServer = require('../../services/commServer/request');
+var semanticRepo = require("../../services/semanticRepo/request");
+
 
 /*
 Public functions
@@ -203,20 +205,42 @@ Receives following parameters:
 */
 function getAllItems(cid, type, offset, filterNumber, filterOntology, callback) {
   var friends = [];
+  var query = {};
   if(!type) type = "device";
   if(!filterNumber) filterNumber = 0;
   userAccountOp.findOne(cid, {knows: 1}).lean()
   .then(function(data){
-    var query = {
+    query = {
       typeOfItem: type,
     };
     if(data.knows != null){
       getIds(data.knows, friends);
     }
-    // Filters oids based on ontology matches to the user selection
-    if(filterOntology.length > 1) query["info.type"] = {$in: filterOntology};
-    query = updateQueryWithFilterNumber(query, filterNumber, cid, friends);
-    return itemOp.find(query, {hasAudits: 0, info: 0})
+    if(filterOntology && filterOntology !== 'core:Device'){
+      return semanticRepo.getAllSubclass(filterOntology);
+    } else {
+      return Promise.resolve(true);
+    }
+    })
+    .catch(function(err){
+      // On error skip the ontology filtering
+      filterOntology = null;
+      return Promise.resolve(true);
+    })
+    .then(function(data){
+      // Filters oids based on ontology classes that match item selection
+      if(filterOntology && filterOntology !== 'core:Device'){
+        var types = [];
+        var parsedData = JSON.parse(data);
+        var oidarray = parsedData.data.results.bindings;
+        for(var i = 0, l = oidarray.length; i < l; i++){
+          types.push(oidarray[i].type.value.replace("#",":"));
+        }
+        types.push(filterOntology); // At parent class
+       query["info.type"] = {$in: types};
+      }
+      query = updateQueryWithFilterNumber(query, filterNumber, cid, friends);
+      return itemOp.find(query, {hasAudits: 0, info: 0})
           .skip(Number(offset))
           .limit(12)
           .sort({name:1})
@@ -371,14 +395,13 @@ function updateQueryWithFilterNumber(q, fN, cid, friends){
           q['cid.id'] = cid;
           break;
       case 5:
-          q.$and = [ { 'cid.id': {$in: friends}}, { accessLevel: 1 } ];
-          q.accessLevel = 1;
+          q.$and = [ { 'cid.id': {$in: friends}}, { accessLevel: {$gt: 0} } ];
           break;
       case 6:
           q.accessLevel = 2;
           break;
       case 7:
-          q.$or = [ { accessLevel: 2 }, { 'cid.id': cid }];
+          q.$or = [ { accessLevel: {$gt: 0} }, { 'cid.id': cid }];
           break;
       case 8:
           q['hasContracts.contractingParty'] = cid;

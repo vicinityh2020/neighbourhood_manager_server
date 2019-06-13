@@ -140,10 +140,25 @@ var map = require("../../configuration/map");
   From file stored and updated every day in server
   If above method fails, gets file from backup stored in code
   */
-  function getOntology() {
+  function getOntology(type) {
     // TODO get from file in server
     return new Promise(function(resolve, reject) {
-      resolve(map.hierarchy);
+      semanticRepo.getSubclass(type)
+      .then(function(response){
+        var parsedResponse = JSON.parse(response);
+        var data = parsedResponse.data.results.bindings;
+        var result = [];
+        for( var i = 0, l = data.length; i < l; i++){
+          result.push({
+              type: data[i].type.value.replace("#", ":"),
+              label: data[i].label.value
+            })
+        }
+        return resolve(result);
+      })
+      .catch(function(error){
+        return reject(error);
+      });
     });
   }
 
