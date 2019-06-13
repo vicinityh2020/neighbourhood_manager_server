@@ -68,8 +68,7 @@ WITHOUT INFERENCES!!!!! -- Only child
 */
 function getSubclass(thing){
 
-  query = {"query" : "PREFIX adapters: <http://iot.linkeddata.es/def/adapters#> PREFIX systems: <http://www.w3.org/ns/ssn/systems/> PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>  PREFIX ssn: <http://www.w3.org/ns/ssn/>  PREFIX core:<http://iot.linkeddata.es/def/core#> PREFIX : <http://iot.linkeddata.es/def/core#> PREFIX wot: <http://iot.linkeddata.es/def/wot#> select distinct * WHERE{ { select ?s WHERE{ Graph <http://vicinity.eu/schema> {  ?s a " + thing + " . }}} UNION {select ?s WHERE  { Graph  <http://vicinity.eu/schema> {  ?s rdfs:subClassOf " + thing + " . }}}}" };
-
+  query = {"query" : "PREFIX adapters: <http://iot.linkeddata.es/def/adapters#> PREFIX systems: <http://www.w3.org/ns/ssn/systems/> PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>  PREFIX ssn: <http://www.w3.org/ns/ssn/>  PREFIX core:<http://iot.linkeddata.es/def/core#> PREFIX : <http://iot.linkeddata.es/def/core#> PREFIX wot: <http://iot.linkeddata.es/def/wot#> select distinct ?type ?label WHERE{ {select ?s WHERE  { Graph  <http://vicinity.eu/extensions/adp> {  ?s rdfs:subClassOf " + thing + " . } } } UNION {select ?s WHERE  { Graph  <http://vicinity.eu/extensions/adp> {  ?s a " + thing + " . }}} . {select ?s ?label WHERE  { Graph  <http://vicinity.eu/extensions/adp> {  ?s rdfs:subClassOf " + thing + " .  ?s rdfs:label ?label . } } } UNION {select ?s ?label WHERE  { Graph  <http://vicinity.eu/extensions/adp> {  ?s a " + thing + " .  ?s rdfs:label ?label . } } } BIND(REPLACE(str(?s), 'http://iot.linkeddata.es/def/', '') AS ?type) . }" };
   payload = JSON.stringify(query);
 
   return request({
@@ -88,7 +87,7 @@ The headers are preconfigured
 WITH INFERENCES!!!!! -- Childs and all grandchilds
 */
 function getAllSubclass(thing){
-  query = {"query" : "PREFIX adapters: <http://iot.linkeddata.es/def/adapters#> PREFIX systems: <http://www.w3.org/ns/ssn/systems/> PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>  PREFIX ssn: <http://www.w3.org/ns/ssn/>  PREFIX core:<http://iot.linkeddata.es/def/core#> PREFIX : <http://iot.linkeddata.es/def/core#> PREFIX wot: <http://iot.linkeddata.es/def/wot#> select distinct * WHERE{ { select ?s WHERE{ ?s a " + thing + " . }} UNION {select ?s WHERE {  ?s rdfs:subClassOf " + thing + " . }}}" };
+  query = {"query" : "PREFIX adapters: <http://iot.linkeddata.es/def/adapters#> PREFIX systems: <http://www.w3.org/ns/ssn/systems/> PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>  PREFIX ssn: <http://www.w3.org/ns/ssn/>  PREFIX core:<http://iot.linkeddata.es/def/core#> PREFIX : <http://iot.linkeddata.es/def/core#> PREFIX wot: <http://iot.linkeddata.es/def/wot#> select distinct ?label ?type  WHERE{ {select ?s WHERE {  ?s rdfs:subClassOf " + thing + " . }} UNION {select ?s WHERE  {  ?s a " + thing + " . }}. {select ?s ?label WHERE {  ?s rdfs:subClassOf " + thing + " .  ?s rdfs:label ?label . } } UNION {select ?s ?label WHERE {  ?s a " + thing + " .  ?s rdfs:label ?label . } } . BIND(REPLACE(str(?s), 'http://iot.linkeddata.es/def/', '') AS ?type) . }" };
 
   payload = JSON.stringify(query);
 
@@ -107,24 +106,19 @@ When invoked retrieves all available graphs containing the selected class
 The headers are preconfigured
 If getGraph true --> Retrieves the context instead of the subject, necessary for properties
 */
-function getGraphOids(thing, predicate, getGraph){
+function getGraphOids(thing){
+    query = {"query": "PREFIX adapters: <http://iot.linkeddata.es/def/adapters#> PREFIX systems: <http://www.w3.org/ns/ssn/systems/> PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>  PREFIX ssn: <http://www.w3.org/ns/ssn/>  PREFIX core: <http://iot.linkeddata.es/def/core#> PREFIX wot: <http://iot.linkeddata.es/def/wot#>  PREFIX : <http://iot.linkeddata.es/def/core#> PREFIX ssn-system: <http:/www.w3.org/ns/ssn/systems/> select distinct ?oid WHERE { GRAPH ?s { ?sub a " + thing + " . } BIND(REPLACE(str(?s), 'http://vicinity.eu/data/things/', '') AS ?oid) . }" };
 
-  if(getGraph === true){
-    query = {"query": "PREFIX adapters: <http://iot.linkeddata.es/def/adapters#> PREFIX systems: <http://www.w3.org/ns/ssn/systems/> PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>  PREFIX ssn: <http://www.w3.org/ns/ssn/>  PREFIX core: <http://iot.linkeddata.es/def/core#> PREFIX wot: <http://iot.linkeddata.es/def/wot#>  PREFIX : <http://iot.linkeddata.es/def/core#> select distinct ?s WHERE { GRAPH ?s { ?sub " + predicate + " " + thing + " . } }" };
-  } else {
-    query = {"query": "PREFIX adapters: <http://iot.linkeddata.es/def/adapters#> PREFIX systems: <http://www.w3.org/ns/ssn/systems/> PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>  PREFIX ssn: <http://www.w3.org/ns/ssn/>  PREFIX core: <http://iot.linkeddata.es/def/core#> PREFIX wot: <http://iot.linkeddata.es/def/wot#>  PREFIX : <http://iot.linkeddata.es/def/core#> select distinct ?s WHERE { ?s " + predicate + " " + thing + " . }" };
+    payload = JSON.stringify(query);
+
+    return request({
+      method : "POST",
+      headers: head,
+      uri: config.semanticRepoUrl + "sparql",
+      body: payload
+      // simple: true
+    });
   }
-
-  payload = JSON.stringify(query);
-
-  return request({
-    method : "POST",
-    headers: head,
-    uri: config.semanticRepoUrl + "sparql",
-    body: payload
-    // simple: true
-  });
-}
 
 // Export functions
 module.exports.callSemanticRepo = callSemanticRepo;
