@@ -71,6 +71,20 @@ function authenticate(req, res, callback) {
 }
 
 /*
+Refreshes the token after the update of the roles
+*/
+function refreshToken(req, res, callback){
+  try{
+    var token = req.body.decoded_token;
+    var roles = req.body.roles;
+    var credentials = jwt.jwtEncode(token.uid, token.sub, roles, token.orgid, token.cid);
+    callback(false, credentials, {uid: token.uid, cid: token.orgid});
+  } catch(err) {
+    callback(true, err);
+  }
+}
+
+/*
 Stores cookie in MONGO for the Remember Me functionality
 */
 function rememberCookie(token, callback) {
@@ -176,6 +190,7 @@ function updateCookie(o_id_cookie, token, updates, callback) {
 // Export functions
 
 module.exports.authenticate = authenticate;
+module.exports.refreshToken = refreshToken;
 module.exports.findMail = findMail;
 module.exports.rememberCookie = rememberCookie;
 module.exports.updatePwd = updatePwd;

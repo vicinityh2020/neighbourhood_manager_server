@@ -13,6 +13,13 @@ function authenticate(req, res, next) {
   });
 }
 
+/* Check user and password. */
+function refreshToken(req, res, next) {
+  sLogin.refreshToken(req, res, function(err, response){
+      res.json({error: err, message: response});
+  });
+}
+
 /* Recover password - Sends link to the provided mail */
 function findMail(req, res, next) {
   var userName = req.body.username;
@@ -67,6 +74,7 @@ function updateCookie(req, res) {
 // Export functions
 
 module.exports.authenticate = authenticate;
+module.exports.refreshToken = refreshToken;
 module.exports.findMail = findMail;
 module.exports.rememberCookie = rememberCookie;
 module.exports.updatePwd = updatePwd;
