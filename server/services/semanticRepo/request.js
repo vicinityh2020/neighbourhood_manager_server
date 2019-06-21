@@ -68,13 +68,13 @@ WITHOUT INFERENCES!!!!! -- Only child
 */
 function getSubclass(thing){
 
-  query = {"query" : "PREFIX adapters: <http://iot.linkeddata.es/def/adapters#> PREFIX systems: <http://www.w3.org/ns/ssn/systems/> PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>  PREFIX ssn: <http://www.w3.org/ns/ssn/>  PREFIX core:<http://iot.linkeddata.es/def/core#> PREFIX : <http://iot.linkeddata.es/def/core#> PREFIX wot: <http://iot.linkeddata.es/def/wot#> select distinct ?type ?label WHERE{ {select ?s WHERE  { Graph  <http://vicinity.eu/extensions/adp> {  ?s rdfs:subClassOf " + thing + " . } } } UNION {select ?s WHERE  { Graph  <http://vicinity.eu/extensions/adp> {  ?s a " + thing + " . }}} . {select ?s ?label WHERE  { Graph  <http://vicinity.eu/extensions/adp> {  ?s rdfs:subClassOf " + thing + " .  ?s rdfs:label ?label . } } } UNION {select ?s ?label WHERE  { Graph  <http://vicinity.eu/extensions/adp> {  ?s a " + thing + " .  ?s rdfs:label ?label . } } } BIND(REPLACE(str(?s), 'http://iot.linkeddata.es/def/', '') AS ?type) . }" };
+  query = {"query" : "PREFIX owl: <http://www.w3.org/2002/07/owl#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX wot: <http://iot.linkeddata.es/def/wot#> PREFIX core: <http://iot.linkeddata.es/def/core#> PREFIX foaf: <http://xmlns.com/foaf/0.1/> PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#> PREFIX ssn: <http://www.w3.org/ns/ssn/> PREFIX adapters: <http://iot.linkeddata.es/def/adapters#>  PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> PREFIX map: <http://iot.linkeddata.es/def/wot-mappings#> select distinct ?type ?label where { ?s rdfs:subClassOf ?subClass . VALUES ?subClass { " + thing + " } . ?s rdfs:label ?label . BIND(REPLACE(str(?s), 'http://iot.linkeddata.es/def/', '') AS ?type) . }" };
   payload = JSON.stringify(query);
 
   return request({
     method : "POST",
     headers: head,
-    uri: config.semanticRepoUrl + "sparql",
+    uri: config.semanticRepoUrl + "sparql?name=&infer=false&sameAs=true", // Get only subclasses, NO INFERENCES
     body: payload
     // simple: true
   });
@@ -87,7 +87,7 @@ The headers are preconfigured
 WITH INFERENCES!!!!! -- Childs and all grandchilds
 */
 function getAllSubclass(thing){
-  query = {"query" : "PREFIX adapters: <http://iot.linkeddata.es/def/adapters#> PREFIX systems: <http://www.w3.org/ns/ssn/systems/> PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>  PREFIX ssn: <http://www.w3.org/ns/ssn/>  PREFIX core:<http://iot.linkeddata.es/def/core#> PREFIX : <http://iot.linkeddata.es/def/core#> PREFIX wot: <http://iot.linkeddata.es/def/wot#> select distinct ?label ?type  WHERE{ {select ?s WHERE {  ?s rdfs:subClassOf " + thing + " . }} UNION {select ?s WHERE  {  ?s a " + thing + " . }}. {select ?s ?label WHERE {  ?s rdfs:subClassOf " + thing + " .  ?s rdfs:label ?label . } } UNION {select ?s ?label WHERE {  ?s a " + thing + " .  ?s rdfs:label ?label . } } . BIND(REPLACE(str(?s), 'http://iot.linkeddata.es/def/', '') AS ?type) . }" };
+  query = {"query" : "PREFIX owl: <http://www.w3.org/2002/07/owl#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX wot: <http://iot.linkeddata.es/def/wot#> PREFIX core: <http://iot.linkeddata.es/def/core#> PREFIX foaf: <http://xmlns.com/foaf/0.1/> PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#> PREFIX ssn: <http://www.w3.org/ns/ssn/> PREFIX adapters: <http://iot.linkeddata.es/def/adapters#>  PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> PREFIX map: <http://iot.linkeddata.es/def/wot-mappings#> select distinct ?type ?label where { ?s rdfs:subClassOf ?subClass . VALUES ?subClass { " + thing + " } . ?s rdfs:label ?label . BIND(REPLACE(str(?s), 'http://iot.linkeddata.es/def/', '') AS ?type) . }" };
 
   payload = JSON.stringify(query);
 
