@@ -54,7 +54,31 @@ operational.removeContracts = function(req, res){
   var roles = req.body.decoded_token.roles;
   var canContinue = roles.indexOf('devOps') !== -1;
   if(canContinue){
-    ctHelper.remove(req.body.contracts)
+    ctHelper.removeContracts(req.body.contracts)
+    .then(function(response){
+      res.json({error: false, message: response});
+    })
+    .catch(function(err){
+      res.status(500);
+      res.json({error: true, message: err});
+    });
+  } else {
+    res.status(401);
+    res.json({error: false, message: 'Unauthorized'});
+  }
+};
+
+/**
+ * Remove organisation
+ * @params {Array} Objects with organisation info
+ * @headers {Object} token
+ * @return Confirmation
+ */
+operational.removeOrganisation = function(req, res){
+  var roles = req.body.decoded_token.roles;
+  var canContinue = roles.indexOf('devOps') !== -1;
+  if(canContinue){
+    ctHelper.removeOrganisation(req.body)
     .then(function(response){
       res.json({error: false, message: response});
     })
