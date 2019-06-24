@@ -8,7 +8,7 @@ var config = require('../../configuration/configuration');
 function getStatistics(callback) {
   fs.readFile( config.vicinityServicesDir + "getStatistics/statistics.log", 'utf8', function(err, file){
     if(err || !file){
-      var error = err || "File not found";
+      var error = err || {message: "File not found"};
       callback(true, error);
     } else {
       // Get annotations from annotations service (Updates every day)
