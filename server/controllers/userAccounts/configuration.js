@@ -35,7 +35,7 @@ Users, nodes, items
 function remove(req, res, next) {
   var cid = req.body.decoded_token.cid;
   logger.log(req, res, {type: 'debug', data: "Removing organisation... " + cid});
-  sOrgConfiguration.remove(req, res, function(err, data){
+  sOrgConfiguration.remove(req, res, null, function(err, data){
     if(err){
       logger.log(req, res, {type: 'error', data: data});
     } else {

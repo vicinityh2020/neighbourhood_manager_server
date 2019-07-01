@@ -9,6 +9,7 @@ router
 // items
 .put('/items/enable', controllers.enable)
 .put('/items/disable', controllers.disable)
-.post('/contracts/remove', controllers.removeContracts);
+.post('/contracts/remove', controllers.removeContracts)
+.post('/organisation/remove', controllers.removeOrganisation);
 
 module.exports = router;

@@ -3,6 +3,7 @@ var operational = module.exports = {};
 var logger = require("../../middlewares/logBuilder");
 var sUpdate = require("../../services/items/update");
 var ctHelper = require("../../services/operational/remove.js");
+var sOrganisations = require("../../services/organisations/configuration.js");
 
 // Public functions
 
@@ -77,17 +78,19 @@ operational.removeContracts = function(req, res){
 operational.removeOrganisation = function(req, res){
   var roles = req.body.decoded_token.roles;
   var canContinue = roles.indexOf('devOps') !== -1;
-  if(canContinue){
-    ctHelper.removeOrganisation(req.body)
-    .then(function(response){
-      res.json({error: false, message: response});
-    })
-    .catch(function(err){
-      res.status(500);
-      res.json({error: true, message: err});
+  var noBody = !req.body.id || !req.body.extid;
+  console.log("HELLO");
+  if(canContinue && !noBody){
+    sOrganisations.remove(req, res, req.body, function(err, response){
+      res.json({error: err, message: response});
     });
   } else {
-    res.status(401);
-    res.json({error: false, message: 'Unauthorized'});
+    if(!canContinue){
+      res.status(401);
+      res.json({error: false, message: 'Unauthorized'});
+    } else {
+      res.status(404);
+      res.json({error: false, message: 'Missing or malformed payload'});
+    }
   }
 };

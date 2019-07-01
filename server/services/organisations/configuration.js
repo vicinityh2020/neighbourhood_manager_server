@@ -35,11 +35,13 @@ function put(cid, update, callback) {
   });
 }
 
-/*
-Removes organisation and everything under:
-Users, nodes, items
-*/
-function remove(req, res, callback) {
+/**
+ * Removes organisation and everything under:
+ * @params {Req Res Object[Optional]}
+ * {extid:.., id:... }
+ * @returns {Callback}
+ */
+function remove(req, res, payload, callback) {
   try{
     if(req.body.decoded_token){
       req.body.decoded_token.sub = req.body.decoded_token.sub || null;
@@ -48,9 +50,16 @@ function remove(req, res, callback) {
       req.body = {};
       req.body.decoded_token = {sub : null, uid: null};
     }
-    var cid = mongoose.Types.ObjectId(req.body.decoded_token.orgid);
+    // Org ids
+    if(payload === null){
+      var cid = mongoose.Types.ObjectId(req.body.decoded_token.orgid);
+      var semantic_extid = req.body.decoded_token.cid;
+    } else {
+      var cid = payload.id;
+      var semantic_extid = payload.extid;
+    }
+    // User ids
     var uid = mongoose.Types.ObjectId(req.body.decoded_token.uid);
-    var semantic_extid = req.body.decoded_token.cid;
     var mail = req.body.decoded_token.sub;
 
     // Start final result info object
