@@ -82,6 +82,7 @@ Remove whole contract
 * @return {Promise}
 */
 function removeAllContract(id, token_uid, token_mail) {
+  var obj = {};
   obj.queryId = checkInput(id, false);
   obj.token_uid = token_uid;
   obj.token_mail = token_uid;

@@ -14,6 +14,7 @@ var myNode = require('../../services/nodes/processNode');
 var sContracts = require('../../services/contracts/contracts');
 var uuid = require("uuid");
 var semanticRepo = require('../../services/semanticRepo/request');
+var logger = require("../../middlewares/logBuilder");
 
 // Public functions
 
@@ -69,6 +70,7 @@ function remove(req, res, payload, callback) {
     companyAccountOp.findOne({ _id: cid },
       function(err, companyData){
         if (err) {
+          logger.log(req, res, {type: 'error', data: err});
           callback(true, err);
         } else if (!companyData) {
           callback(false, "Organisation not found");
@@ -124,11 +126,13 @@ function remove(req, res, payload, callback) {
             callback(false, deletingResults);
           })
           .catch(function(err){
+            logger.log(req, res, {type: 'error', data: err});
             callback(true, err);
           });
         }
       });
     } catch(err) {
+      logger.log(req, res, {type: 'error', data: err});
       callback(true, err);
     }
   }
