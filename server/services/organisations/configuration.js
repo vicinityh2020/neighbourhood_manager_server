@@ -70,7 +70,7 @@ function remove(req, res, payload, callback) {
       function(err, companyData){
         if (err) {
           callback(true, err);
-        if (!companyData) {
+        } else if (!companyData) {
           callback(false, "Organisation not found");
         } else {
           var companyDataParsed = companyData.toObject();
