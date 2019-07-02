@@ -79,7 +79,6 @@ operational.removeOrganisation = function(req, res){
   var roles = req.body.decoded_token.roles;
   var canContinue = roles.indexOf('devOps') !== -1;
   var noBody = !req.body.id || !req.body.extid;
-  console.log("HELLO");
   if(canContinue && !noBody){
     sOrganisations.remove(req, res, req.body, function(err, response){
       res.json({error: err, message: response});

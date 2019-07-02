@@ -55,7 +55,7 @@ function remove(req, res, payload, callback) {
       var cid = mongoose.Types.ObjectId(req.body.decoded_token.orgid);
       var semantic_extid = req.body.decoded_token.cid;
     } else {
-      var cid = payload.id;
+      var cid = mongoose.Types.ObjectId(payload.id);
       var semantic_extid = payload.extid;
     }
     // User ids
@@ -70,6 +70,8 @@ function remove(req, res, payload, callback) {
       function(err, companyData){
         if (err) {
           callback(true, err);
+        if (!companyData) {
+          callback(false, "Organisation not found");
         } else {
           var companyDataParsed = companyData.toObject();
           var friends = [];
