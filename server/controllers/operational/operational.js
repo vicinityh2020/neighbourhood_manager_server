@@ -80,7 +80,10 @@ operational.removeOrganisation = function(req, res){
   var canContinue = roles.indexOf('devOps') !== -1;
   var noBody = !req.body.id || !req.body.extid;
   if(canContinue && !noBody){
-    sOrganisations.remove(req, res, req.body, function(err, response){
+    var payload = {};
+    payload.body = req.body;
+    payload.everything = true; // Removes all despite checks (devOps override)
+    sOrganisations.remove(req, res, payload, function(err, response){
       res.json({error: err, message: response});
     });
   } else {

@@ -17,7 +17,8 @@ var uuid = require('uuid');
 Deletes a selection of users
 Users to be removed pass their ids in an array as parameter
 */
-function deleteAllUsers(users, req, res){
+function deleteAllUsers(users, req, res, override){
+  var noChecks = override || false;
   return new Promise(function(resolve, reject) {
     if(users.length > 0){ // Check if there is any item to delete
       sync.forEachAll(users,
@@ -33,7 +34,7 @@ function deleteAllUsers(users, req, res){
           }
         },
         false,
-        { req : req, res: res }
+        { req : req, res: res, noChecks: noChecks }
       );
     } else {
       logger.log(req, res, {type: 'debug', data: "Nothing to be removed"});
@@ -66,6 +67,8 @@ Need to keep some fields for auditing purposes
 function deleting(id, otherParams, callback){
   var userMail = otherParams.req.body.decoded_token.sub;
   var userId = otherParams.req.body.decoded_token.uid;
+  // Skip checks if override true
+  var override = otherParams.noChecks;
   var cid;
   var aux;
   var obj = {
@@ -83,7 +86,7 @@ function deleting(id, otherParams, callback){
   .then(function(response){
     aux = response.toObject();
     cid = aux.cid;
-    if(aux.hasItems.length + aux.hasContracts.length > 0){
+    if(aux.hasItems.length + aux.hasContracts.length > 0 && !override){
       return new Promise(function(resolve, reject) { reject('User has items or contracts'); });
     } else {
       obj.name = aux.name + ":" + uuid();
@@ -91,11 +94,15 @@ function deleting(id, otherParams, callback){
     }
   })
   .then(function(response){
-    return audits.create(
-      { kind: 'user', item: userId , extid: userMail },
-      { kind: 'userAccount', item: cid.id, extid: cid.extid },
-      { kind: 'user', extid: aux.email },
-      12, null);
+    if(!override){
+      return audits.create(
+        { kind: 'user', item: userId , extid: userMail },
+        { kind: 'userAccount', item: cid.id, extid: cid.extid },
+        { kind: 'user', extid: aux.email },
+        12, null);
+    } else {
+      Promise.resolve(true);
+    }
   })
   .then(function(response){ return userAccountOp.update({_id: cid.id}, {$pull: {accountOf: { id: id }}}); })
   .then(function(response){
