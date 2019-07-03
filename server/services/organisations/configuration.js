@@ -55,9 +55,11 @@ function remove(req, res, payload, callback) {
     if(payload === null){
       var cid = mongoose.Types.ObjectId(req.body.decoded_token.orgid);
       var semantic_extid = req.body.decoded_token.cid;
+      var override = false;
     } else {
-      var cid = mongoose.Types.ObjectId(payload.id);
-      var semantic_extid = payload.extid;
+      var cid = mongoose.Types.ObjectId(payload.body.id);
+      var semantic_extid = payload.body.extid;
+      var override = payload.everything;
     }
     // User ids
     var uid = mongoose.Types.ObjectId(req.body.decoded_token.uid);
@@ -97,7 +99,7 @@ function remove(req, res, payload, callback) {
             deletingResults.nodes = response;
             // Users are the last thing to be removeFriend
             // To remove a user it cannot have any item or contract under
-            return delUser.deleteAllUsers(users, req, res);
+            return delUser.deleteAllUsers(users, req, res, override);
           })
           .then(function(response){
             deletingResults.users = response;
