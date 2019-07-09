@@ -36,13 +36,12 @@ if(process.env.env === 'test'){
               // timestamp: true,
               handleExceptions: false, // we capture them as a type
               json: false,
-              colorize: true,
-              prettyPrint: true
+              colorize: true
+              // prettyPrint: true
           })
       ],
       exitOnError: false
   });
-
 } else {
   var logger = new winston.Logger({
       levels: myCustomLevels.levels,
@@ -58,33 +57,29 @@ if(process.env.env === 'test'){
           //     colorize: false,
           //     prettyPrint: true,
           // }),
-          // new winston.transports.File({
-          //     level: 'audit',
-          //     filename: config.technicalLog || "./logs/technical_log.log",
-          //     handleExceptions: true,
-          //     // timestamp: true,
-          //     json: true,
-          //     maxsize: 5242880, //5MB
-          //     maxFiles: 5,
-          //     colorize: false,
-          //     prettyPrint: true
-          // }),
           new winston.transports.Console({
               level: 'debug',
               // timestamp: true,
               handleExceptions: true, // we capture them as a type
               json: false,
               colorize: true,
-              prettyPrint: true
+              prettyPrint: false
           })
       ],
       exitOnError: false
   });
 }
+
 module.exports = logger;
 
-// module.exports.stream = {
-//     write: function(message, encoding){
-//         logger.info(message.slice(0,-1)); // Remove additional line char
-//     }
-// };
+module.exports.stream = {
+    write: function(message, encoding){
+        if(message.substr(0, 3) >= 500){
+          logger.error(message.slice(0,-1)); // Remove additional line char
+        } else if(message.substr(0, 3) >= 400){
+          logger.warn(message.slice(0,-1));
+        } else {
+          logger.info(message.slice(0,-1));
+        }
+    }
+};

@@ -9,19 +9,22 @@ ELASTIC_APM_SERVER_URL
 */
 var apm = require('elastic-apm-node').start();
 
+// Import configuration
+var config = require("./configuration/configuration");
+
+// Import Packages
 var express = require('express');
 var cors = require('cors');
 var path = require('path');
 var file = require('fs');
 var favicon = require('serve-favicon');
-var logger = require('morgan');
+var morgan = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var helmet = require("helmet"); // Forcing SSL
-var config = require("./configuration/configuration");
 
-// ROUTES Import
+// Import Routes
 var login = require('./routes/login');
 var api = require('./routes/api');
 var audit = require('./routes/audit');
@@ -37,21 +40,20 @@ var search = require('./routes/search');
 var infrastructure = require('./routes/infrastructure');
 var operational = require('./routes/operational');
 
-
-// Custom MIDDLEWARES Import === jwauth && Winston Debugger
+// Import Custom MIDDLEWARES
 var jwtauth = require("./middlewares/jwtauth");
 var logger = require("./middlewares/logger");
-var logs = require("./middlewares/logBuilder");
 
+// Start express app
 var app = express();
 
-// MIDDLEWARES ================
-
-// uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+/*
+Middlewares
+*/
 app.use(cors());
-// app.set('view engine', 'pug'); // Default view engine
-if (process.env.env !== 'test') app.use(logs.customLogs); // Custom logger, if NO test
+if (process.env.env !== 'test'){ // Custom logger, if NO test
+  app.use(morgan(':status - :date[iso] - :method - :url - :response-time - :remote-addr', { "stream": logger.stream}));
+}
 app.use(bodyParser.json({limit: config.maxPayload}));
 app.use(bodyParser.urlencoded({limit: config.maxPayload, extended: true}));
 app.use(cookieParser());
@@ -86,7 +88,7 @@ Error and not found handlers
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-  var err = new Error('Not Found');
+  var err = new Error(req.originalUrl + ' not found');
   err.status = 404;
   next(err);
 });
@@ -105,7 +107,9 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500).send({ error: true, message: err });
 });
 
-// ENDING MIDDLEWARES ================
+/*
+Database connection
+*/
 
 // CONNECTING to MONGO
 var options = {};
@@ -127,6 +131,7 @@ mongoose.connect(process.env.VCNT_MNGR_DB, options, function(error){
   }
 });
 
-// Export app module
-
+/*
+Export app module
+*/
 module.exports = app;

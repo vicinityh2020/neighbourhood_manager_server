@@ -109,10 +109,12 @@ function createMessage(req, res, body){
   var result;
   var date = new Date().toISOString();
   var info = {};
-  info.origin = req.headers ? req.headers.origin : "N/A";
+  info.origin = req.headers ? req.headers['x-forwarded-for'] : null;
+  info.origin = info.origin || req.connection.remoteAddress;
   info.status = res.statusCode || "N/A";
   info.url = req.url || "N/A";
-  result = info.origin + " : " + date +  " : " + info.url + " : " + info.status + " : [ " + body + " ]";
+  info.method = req.method || "N/A";
+  result = info.status + " - " + date +  " - " + info.method +  " - " + info.url + " - " + info.origin + " - [ " + body + " ]";
   return result;
 }
 
