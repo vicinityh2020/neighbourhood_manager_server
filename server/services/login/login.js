@@ -2,12 +2,14 @@ var mongoose = require('mongoose');
 var userOp = require('../../models/vicinityManager').user;
 var rememberOp = require('../../models/vicinityManager').remember;
 var userAccountsOp = require('../../models/vicinityManager').userAccount;
+var tokenOp = require('../../models/vicinityManager').token;
 var config = require('../../configuration/configuration');
 var jwt = require('../../services/jwtHelper');
 var mailing = require('../../services/mail/mailing');
 var logger = require("../../middlewares/logBuilder");
 var bcrypt = require('bcrypt');
 var audits = require('../../services/audit/audit');
+var crypto = require('crypto');
 
 /*
 Check user and password
@@ -105,20 +107,24 @@ The link provided redirects to updatePwd function in this same module
 */
 function findMail(userName, callback){
   var userNameRegex = new RegExp("^" + userName.toLowerCase(), "i");
+  var userData;
   userOp.findOne({ email:  { $regex: userNameRegex } }, {contactMail:1, email:1, name:1})
-  .then(function(result){
-    if(!result) return false;
+  .then(function(response){
+    if(!response) callback(true, {data: "Username not found", type: "warn"});
+    userData = response;
+    return createUniqueId(userData._id);
+  })
+  .then(function(uniqueId){
     var mailInfo = {
-      link : config.baseHref + "/#/authentication/recoverPassword/" + result._id,
-      emailTo : result.contactMail || result.email,
+      link : config.baseHref + "/#/authentication/recoverPassword/" + uniqueId,
+      emailTo : userData.contactMail || userData.email,
       subject : 'Password recovery email VICINITY',
       tmpName :'recoverPwd',
-      name : result.name
+      name : userData.name
     };
     return mailing.sendMail(mailInfo);
   })
   .then(function(response){
-    if(!response) callback(true, {data: "Username not found", type: "warn"});
     callback(false, response);
   })
   .catch(function(err){
@@ -128,8 +134,61 @@ function findMail(userName, callback){
 
 /*
 Updates user password/hash
+Mail requests
 */
 function updatePwd(id, pwd, callback) {
+  var o_id;
+  var saltRounds = 10;
+  var salt = "";
+  var hash = "";
+
+  if(pwd === null || pwd.length < 8){
+     callback(true, "Missing or short password");
+  } else {
+    // id comes encoded for uri, we need to decode to find a match
+    var idParsed = decodeURIComponent(id).trim();
+    tokenOp.findOne({token: idParsed})
+    .then(function(response){
+      return checkTokenValidity(response);
+    })
+    .then(function(response){
+      o_id = response;
+      return bcrypt.genSalt(saltRounds);
+    })
+    .then(function(response){
+      salt = response.toString('hex');
+      return bcrypt.hash(pwd, salt);
+    })
+    .then(function(response){
+      // Store hash in your password DB.
+      hash = response;
+      var updates = {'authentication.hash': hash}; // Stores salt & hash in the hash field
+      return userOp.update({ "_id": o_id}, {$set: updates});
+    })
+    .then(function(response){
+      return userOp.findOne({ "_id": o_id}, {cid: 1, email:1});
+    })
+    .then(function(response){
+      return audits.create(
+        { kind: 'user', item: response._id , extid: response.email },
+        { kind: 'userAccount', item: response.cid.id, extid: response.cid.extid },
+        { kind: 'user', item: response._id, extid: response.email },
+        16, null);
+    })
+    .then(function(response){
+      callback(false, {message: 'Password updated', user: o_id });
+    })
+    .catch(function(err){
+      callback(true, err);
+    });
+  }
+}
+
+/*
+Updates user password/hash
+UI requests
+*/
+function updatePwdUI(id, pwd, callback) {
   var o_id = mongoose.Types.ObjectId(id);
   var saltRounds = 10;
   var salt = "";
@@ -138,6 +197,7 @@ function updatePwd(id, pwd, callback) {
   if(pwd === null || pwd.length < 8){
      callback(true, "Missing or short password");
   } else {
+    // id comes encoded for uri, we need to decode to find a match
     bcrypt.genSalt(saltRounds)
     .then(function(response){
       salt = response.toString('hex');
@@ -160,7 +220,7 @@ function updatePwd(id, pwd, callback) {
         16, null);
     })
     .then(function(response){
-      callback(false, 'Password updated');
+      callback(false, {message: 'Password updated', user: o_id });
     })
     .catch(function(err){
       callback(true, err);
@@ -187,6 +247,47 @@ function updateCookie(o_id_cookie, token, updates, callback) {
   });
 }
 
+// -----------------
+// Private functions
+// -----------------
+
+// Stores token to validate password recovery
+// Returns token enconded as URI
+function createUniqueId(id){
+  return new Promise(function(resolve, reject) {
+    var token = crypto.randomBytes(16).toString('base64');
+    // Store token in db
+    var db = new tokenOp({token: token, user: id});
+    db.save(function(err, res){
+      if(err) reject("Token not saved!!");
+      resolve(encodeURIComponent(res.token));
+    })
+  });
+}
+
+// Checks expiration and if token was used
+// returns id of the user requesting the new pwd
+function checkTokenValidity(obj){
+  return new Promise(function(resolve, reject) {
+    if(!obj) reject("Password recovery token not found");
+    if(obj.used) reject("Link has already been used");
+    if(compareDate(obj.date)) reject("Link has expired");
+    obj.used = true;
+    obj.save(function(err, data){
+      if(err) reject(err);
+      resolve(data.user);
+    });
+  });
+}
+
+// If more than 2h have past, token is expired and returns true
+function compareDate(d){
+  var created = new Date(d);
+  var now = new Date();
+  var diffHours = Math.abs(now.getTime() - created.getTime()) / (1000 * 60 * 60);
+  return (diffHours > 2);
+}
+
 // Export functions
 
 module.exports.authenticate = authenticate;
@@ -194,4 +295,5 @@ module.exports.refreshToken = refreshToken;
 module.exports.findMail = findMail;
 module.exports.rememberCookie = rememberCookie;
 module.exports.updatePwd = updatePwd;
+module.exports.updatePwdUI = updatePwdUI;
 module.exports.updateCookie = updateCookie;

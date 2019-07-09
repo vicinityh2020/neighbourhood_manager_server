@@ -197,7 +197,7 @@ function putPassword(obj, callback){
   })
   .then(function(response){
     if(response){
-      authHelper.updatePwd(obj.uid, newPwd, function(err, response){
+      authHelper.updatePwdUI(obj.uid, newPwd, function(err, response){
         if(err) callback(true, response, false);
         logger.log(obj.req, obj.res, {type: 'audit', data: {user: obj.userMail, action: 'updatePassword', item: obj.uid }});
         callback(false, response, true);

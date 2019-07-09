@@ -53,7 +53,8 @@ function updatePwd(req, res) {
       logger.log(req, res, {data: response, type: "error"});
       res.json({error: err, message: response});
     } else {
-      res.json({error: err, message: response});
+      logger.log(req, res, {data: response, type: "audit"});
+      res.json({error: err, message: response.message});
     }
   });
 }

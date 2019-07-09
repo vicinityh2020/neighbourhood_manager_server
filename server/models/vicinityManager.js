@@ -294,6 +294,13 @@ var remember = new Schema({
   token: {type: String, required: true},
 });
 
+var token = new Schema({
+  date: {type: Date, default: Date.now},
+  token: {type: String, required: true},
+  user: {type: String, required: true},
+  used: {type: Boolean, default: false}
+});
+
 // Set schema options ==================================
 
 // TODO Set all autoIndex to false when moving to production
@@ -349,3 +356,4 @@ module.exports.remember = mongoose.model('remember', remember);
 module.exports.node = mongoose.model('node', node);
 module.exports.auditLog = mongoose.model('auditLog', auditLog);
 module.exports.contract = mongoose.model('contract', contract);
+module.exports.token = mongoose.model('token', token);
