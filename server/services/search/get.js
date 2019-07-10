@@ -30,7 +30,7 @@ var map = require("../../configuration/map");
     .then(function(response){
       try{
         getOnlyId(friends, response.knows.toObject());
-        return userAccountOp.find({$query: {name: sT}, $hint: { name : 1 }}, projection);
+        return userAccountOp.find({$query: {name: sT, status: {$ne: 'deleted'}}, $hint: { name : 1 }}, projection).limit(25);
       } catch(err){
         return Promise.reject(err);
       }
@@ -71,11 +71,12 @@ var map = require("../../configuration/map");
           $or :[
           {$and: [ { 'cid.id': cid }, { accessLevel: { $gte:0 } } ] },
           {$and: [ { 'cid.id': {$in: friends}}, { accessLevel: { $gte:1 } } ] },
-          { accessLevel: { $gte:2 } }
+          { accessLevel: { $gte:2 } },
+          { status: {$ne: 'deleted'}}
         ],
         name: {$regex: sT}
         };
-        return userOp.find(query, projection);
+        return userOp.find(query, projection).limit(25);
       } catch(err){
         return Promise.reject(err);
       }
@@ -107,7 +108,8 @@ var map = require("../../configuration/map");
           $or :[
           {$and: [ { 'cid.id': cid }, { accessLevel: { $gte:0 } } ] },
           {$and: [ { 'cid.id': {$in: friends}}, { accessLevel: { $gte:1 } } ] },
-          { accessLevel: { $gte:2 } }
+          { accessLevel: { $gte:2 } },
+          { status: {$ne: 'deleted'}}
         ],
         name: {$regex: sT}
         };
@@ -117,7 +119,7 @@ var map = require("../../configuration/map");
         } else {
           projection = { hasAudits: 0 };
         }
-        return itemOp.find(query).select(projection).populate('cid.id','name');
+        return itemOp.find(query).limit(25).select(projection).populate('cid.id','name');
       } catch(err){
         return Promise.reject(err);
       }
