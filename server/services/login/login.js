@@ -138,42 +138,17 @@ Mail requests
 */
 function updatePwd(id, pwd, callback) {
   var o_id;
-  var saltRounds = 10;
-  var salt = "";
-  var hash = "";
-
   if(pwd === null || pwd.length < 8){
      callback(true, "Missing or short password");
   } else {
     // id comes encoded for uri, we need to decode to find a match
-    var idParsed = decodeURIComponent(id).trim();
-    tokenOp.findOne({token: idParsed})
+    tokenOp.findOne({token: decodeURIComponent(id)})
     .then(function(response){
       return checkTokenValidity(response);
     })
     .then(function(response){
       o_id = response;
-      return bcrypt.genSalt(saltRounds);
-    })
-    .then(function(response){
-      salt = response.toString('hex');
-      return bcrypt.hash(pwd, salt);
-    })
-    .then(function(response){
-      // Store hash in your password DB.
-      hash = response;
-      var updates = {'authentication.hash': hash}; // Stores salt & hash in the hash field
-      return userOp.update({ "_id": o_id}, {$set: updates});
-    })
-    .then(function(response){
-      return userOp.findOne({ "_id": o_id}, {cid: 1, email:1});
-    })
-    .then(function(response){
-      return audits.create(
-        { kind: 'user', item: response._id , extid: response.email },
-        { kind: 'userAccount', item: response.cid.id, extid: response.cid.extid },
-        { kind: 'user', item: response._id, extid: response.email },
-        16, null);
+      return updatePwdProcess(o_id, pwd);
     })
     .then(function(response){
       callback(false, {message: 'Password updated', user: o_id });
@@ -190,35 +165,11 @@ UI requests
 */
 function updatePwdUI(id, pwd, callback) {
   var o_id = mongoose.Types.ObjectId(id);
-  var saltRounds = 10;
-  var salt = "";
-  var hash = "";
-
   if(pwd === null || pwd.length < 8){
      callback(true, "Missing or short password");
   } else {
     // id comes encoded for uri, we need to decode to find a match
-    bcrypt.genSalt(saltRounds)
-    .then(function(response){
-      salt = response.toString('hex');
-      return bcrypt.hash(pwd, salt);
-    })
-    .then(function(response){
-      // Store hash in your password DB.
-      hash = response;
-      var updates = {'authentication.hash': hash}; // Stores salt & hash in the hash field
-      return userOp.update({ "_id": o_id}, {$set: updates});
-    })
-    .then(function(response){
-      return userOp.findOne({ "_id": o_id}, {cid: 1, email:1});
-    })
-    .then(function(response){
-      return audits.create(
-        { kind: 'user', item: response._id , extid: response.email },
-        { kind: 'userAccount', item: response.cid.id, extid: response.cid.extid },
-        { kind: 'user', item: response._id, extid: response.email },
-        16, null);
-    })
+    updatePwdProcess(o_id, pwd)
     .then(function(response){
       callback(false, {message: 'Password updated', user: o_id });
     })
@@ -251,11 +202,42 @@ function updateCookie(o_id_cookie, token, updates, callback) {
 // Private functions
 // -----------------
 
+// Update password process
+function updatePwdProcess(o_id, pwd){
+  var saltRounds = 10;
+  var salt = "";
+  var hash = "";
+  return bcrypt.genSalt(saltRounds)
+  .then(function(response){
+    salt = response.toString('hex');
+    return bcrypt.hash(pwd, salt);
+  })
+  .then(function(response){
+    // Store hash in your password DB.
+    hash = response;
+    var updates = {'authentication.hash': hash}; // Stores salt & hash in the hash field
+    return userOp.update({ "_id": o_id}, {$set: updates});
+  })
+  .then(function(response){
+    return userOp.findOne({ "_id": o_id}, {cid: 1, email:1});
+  })
+  .then(function(response){
+    return audits.create(
+      { kind: 'user', item: response._id , extid: response.email },
+      { kind: 'userAccount', item: response.cid.id, extid: response.cid.extid },
+      { kind: 'user', item: response._id, extid: response.email },
+      16, null);
+  });
+}
+
+
 // Stores token to validate password recovery
 // Returns token enconded as URI
 function createUniqueId(id){
   return new Promise(function(resolve, reject) {
-    var token = crypto.randomBytes(16).toString('base64');
+    var token = crypto.randomBytes(32).toString('base64');
+    // Remove special characters
+    // token = token.replace(/[^a-zA-Z0-9]/g, "0")
     // Store token in db
     var db = new tokenOp({token: token, user: id});
     db.save(function(err, res){
