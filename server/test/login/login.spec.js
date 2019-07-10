@@ -14,6 +14,8 @@ chai.use(chaiHttp);
 
 // Global variables
 
+var token;
+
 // tests
 // before(function() {
 // });
@@ -25,8 +27,8 @@ describe('Authentication test scenario', function(){
   it('Get wrong password error - 401', loginWrongPassword);
   it('Get wrong username error - 404', loginWrongName);
   it('Get missing fields - 400', loginMissingField);
-  it('Update password', updatePwd);
   it('Generate token successfully - 200', loginSuccess);
+  it('Update password', updatePwd);
 });
 
 // *************** Functions ***************
@@ -52,6 +54,7 @@ function loginSuccess(done){
       res.body.message.cid.should.be.a('string');
       res.body.message.should.have.property('uid');
       res.body.message.uid.should.be.a('string');
+      token = res.body.message.token;
       done();
     });
   }
@@ -102,16 +105,21 @@ function loginMissingField(done){
 
   function updatePwd(done){
      var data = {
-        password: "password",
+        type: "password",
+        data: {
+          oldPwd: "password",
+          newPwd: "password"
+        }
       };
      chai.request(server)
-        .put('/login/recovery/5bd2cee23b93b3ac41598df5')
+        .put('/api/users/5bd2cee23b93b3ac41598df5')
+        .set('x-access-token', token)
         .send(data)
         .end(function(err, res){
           res.should.have.status(200);
           res.body.should.be.a('object');
           res.body.message.should.be.a('string');
-          res.body.message.should.equal('Password updated');
+          //res.body.message.should.equal('Password updated');
           done();
     });
   }

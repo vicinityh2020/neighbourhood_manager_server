@@ -7,10 +7,12 @@ ELASTIC_APM_SERVICE_NAME
 ELASTIC_APM_SECRET_TOKEN
 ELASTIC_APM_SERVER_URL
 */
-var apm = require('elastic-apm-node').start();
-
 // Import configuration
 var config = require("./configuration/configuration");
+
+if(config.env !== 'test'){
+  var apm = require('elastic-apm-node').start();
+}
 
 // Import Packages
 var express = require('express');

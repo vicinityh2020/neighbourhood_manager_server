@@ -294,7 +294,7 @@ exports.removeOrganisation = function(req, res, next) {
     logger.log(req, res, {type: 'warn', data: "Need admin privileges to remove an organisation"});
     res.json({'error': false, 'message': "Need admin privileges to remove an organisation..."});
   } else {
-    sOrgConfiguration.remove(req, res, function(err, response){
+    sOrgConfiguration.remove(req, res, null, function(err, response){
       if(err){
         res.status(500);
         logger.log(req, res, {type: 'error', data: response});
