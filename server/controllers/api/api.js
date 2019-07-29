@@ -74,7 +74,7 @@ Public --------------------------------------------------
  */
 exports.getStatistics = function(req, res, next) {
   sPublic.getStatistics(function(err, response){
-    if(err) logger.log(req, res, response);
+    if(err) logger.log(req, res, {type: 'error', data: response});
     res.json({error: err, message: response});
   });
 };
