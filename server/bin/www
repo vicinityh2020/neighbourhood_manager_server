@@ -50,6 +50,7 @@ if(config.ssl){
  */
 
 server.listen(port);
+server.timeout = config.serverTimeout;
 server.on('error', onError);
 server.on('listening', onListening);
 

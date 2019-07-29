@@ -21,8 +21,7 @@ Where:
   DOMAIN=false
   LOCAL=false
   SCHEDULED=false
-  # PWD=`pwd`
-  PATH="/home/vcntapi/vicinity_nm_api"
+  SCRIPT_PATH=/home/vcntapi/vicinity_nm_api
 
   # Get configuration
   while getopts 'hd:ld:td:p:d:n:' OPTION; do
@@ -99,7 +98,7 @@ elif [ ${SCHEDULED} == true ]; then
           --mount type=bind,source=${MONGO_CERT}mongo.pem,target=/mongo/ssl/mongo.pem,readonly \
           --mount type=bind,source=${WORKDIR}/statistics/statistics.log,target=/opt/vicinity_services/getStatistics/statistics.log,readonly \
           --mount type=bind,source=${WORKDIR}/annotations/annotations.json,target=/opt/vicinity_services/getAnnotations/annotations.json,readonly \
-          --mount type=bind,source=${PATH}/vcnt_server.config.js,target=/app/vcnt_server.config.js,readonly \
+          --mount type=bind,source=${SCRIPT_PATH}/vcnt_server.config.js,target=/app/vcnt_server.config.js,readonly \
           -v ${LOG_DIR}:/app/logs \
           ${NAME}:latest
 
@@ -128,7 +127,7 @@ elif [ ${SCHEDULED} == true ]; then
               --mount type=bind,source=${CERT},target=/etc/letsencrypt/fullchain.pem,readonly \
               --mount type=bind,source=${MONGO_CERT}mongoCA.crt,target=/mongo/ssl/mongoCA.crt,readonly \
               --mount type=bind,source=${MONGO_CERT}mongo.pem,target=/mongo/ssl/mongo.pem,readonly \
-              --mount type=bind,source=${PATH}/vcnt_server.config.js,target=/app/vcnt_server.config.js,readonly \
+              --mount type=bind,source=${SCRIPT_PATH}/vcnt_server.config.js,target=/app/vcnt_server.config.js,readonly \
               -v ${LOG_DIR}:/app/logs \
               ${NAME}:latest
 

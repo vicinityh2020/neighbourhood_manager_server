@@ -27,6 +27,8 @@ config.technicalLog = process.env.technicalLog;
 config.profilerLog = process.env.profilerLog;
 // Max payload size
 config.maxPayload = process.env.SERVER_MAX_PAYLOAD || "10mb";
+// Server timeout
+config.serverTimeout = process.env.SERVER_TIMEOUT_MS || 30000;
 
 /*
 MongoDB
