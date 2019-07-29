@@ -50,7 +50,8 @@ if(config.ssl){
  */
 
 server.listen(port);
-server.timeout = config.serverTimeout;
+server.timeout = Number(config.serverTimeout);
+console.log("Using timeout: " + server.timeout + "ms");
 server.on('error', onError);
 server.on('listening', onListening);
 
