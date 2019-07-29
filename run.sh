@@ -89,7 +89,7 @@ elif [ ${SCHEDULED} == true ]; then
 
   docker run -d -p $PORT:3000 \
           -it \
-          --rm \
+          --restart always \
           --name ${NAME} \
           --mount type=bind,source=${KEY},target=/etc/letsencrypt/privkey.pem,readonly \
           --mount type=bind,source=${CERT},target=/etc/letsencrypt/fullchain.pem,readonly \
@@ -97,6 +97,7 @@ elif [ ${SCHEDULED} == true ]; then
           --mount type=bind,source=${MONGO_CERT}mongo.pem,target=/mongo/ssl/mongo.pem,readonly \
           --mount type=bind,source=${WORKDIR}/statistics/statistics.log,target=/opt/vicinity_services/getStatistics/statistics.log,readonly \
           --mount type=bind,source=${WORKDIR}/annotations/annotations.json,target=/opt/vicinity_services/getAnnotations/annotations.json,readonly \
+          --mount type=bind,source=./vcnt_server.config.js,target=/app/vcnt_server.config.js,readonly \
           -v ${LOG_DIR}:/app/logs \
           ${NAME}:latest
 
@@ -119,12 +120,13 @@ elif [ ${SCHEDULED} == true ]; then
 
       docker run -d -p $PORT:3000 \
               -it \
-              --rm \
+              --restart always \
               --name ${NAME} \
               --mount type=bind,source=${KEY},target=/etc/letsencrypt/privkey.pem,readonly \
               --mount type=bind,source=${CERT},target=/etc/letsencrypt/fullchain.pem,readonly \
               --mount type=bind,source=${MONGO_CERT}mongoCA.crt,target=/mongo/ssl/mongoCA.crt,readonly \
               --mount type=bind,source=${MONGO_CERT}mongo.pem,target=/mongo/ssl/mongo.pem,readonly \
+              --mount type=bind,source=./vcnt_server.config.js,target=/app/vcnt_server.config.js,readonly \
               -v ${LOG_DIR}:/app/logs \
               ${NAME}:latest
 
