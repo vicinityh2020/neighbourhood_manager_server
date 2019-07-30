@@ -113,7 +113,7 @@ app.use(function(err, req, res, next) {
 Database connection
 */
 
-// CONNECTING to MONGO
+// SET MONGO PROPERTIES AND AUTH
 var options = {};
 options.useMongoClient = true;
 options.ssl = true;
@@ -125,13 +125,29 @@ if( config.mongoCA && config.mongoCert ){
   options.sslPass = config.mongoPass;
 }
 
-mongoose.connect(process.env.VCNT_MNGR_DB, options, function(error){
-  if (error){
-    logger.error("VMModel: Couldn't connect to data source!" + error);
-  } else {
-    logger.info("VMModel: Datasource connection established!");
-  }
-});
+// CONNECTING to MONGO
+var conn_attempts = 1;
+var retryConnection = function(){
+  conn_attempts++;
+  logger.warn('Retrying connection to mongo...');
+  mongoConnect(process.env.VCNT_MNGR_DB, options);
+};
+var mongoConnect = function(){
+  mongoose.connect(process.env.VCNT_MNGR_DB, options, function(error){
+    if (error){
+      if(conn_attempts > 5){
+        logger.error("Couldn't connect to data source!" + error);
+        process.exit(-1);
+      }
+      setTimeout(retryConnection, 5000);
+    } else {
+      logger.info("Datasource connection established!");
+    }
+  });
+};
+
+// STARTING DB CONNECTION
+mongoConnect();
 
 /*
 Export app module
