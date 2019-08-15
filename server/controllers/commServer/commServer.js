@@ -6,6 +6,7 @@ var sUpdItems = require("../../services/items/updThingDescription");
 var sDelNode = require('../../services/nodes/processNode');
 var sGetNodeItems = require('../../services/nodes/get');
 var commServer = require('../../services/commServer/request');
+var counters = require('../../services/counters/counters');
 
 var nodeOp = require('../../models/vicinityManager').node;
 var itemOp = require('../../models/vicinityManager').item;
@@ -300,6 +301,26 @@ function neighbourhood(req, res){
   .catch(function(err){res.json({"error": true, "message": err});});
 }
 
+/*
+Receive the count of messages from the Gateway
+*/
+function sendCounters(req, res){
+  var records = req.body.records;
+  if(records && records.length > 0){
+    counters.storeCounters(records)
+    .then(function(response){
+      console.log("Success");
+      res.json({"error": false, "message": "success"});
+    })
+    .catch(function(err){
+      console.log(err);
+      res.json({"error": true, "message": err});
+    });
+  } else {
+    res.json({"error": false, "message": "Nothing to process"});
+  }
+}
+
 // Export modules
 
 module.exports.registration = registration;
@@ -313,3 +334,4 @@ module.exports.updateItem = updateItem;
 module.exports.getAgentItems = getAgentItems;
 module.exports.deleteAgent = deleteAgent;
 module.exports.neighbourhood = neighbourhood;
+module.exports.sendCounters = sendCounters;

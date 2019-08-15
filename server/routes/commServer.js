@@ -16,6 +16,7 @@ router
 .post('/items/disable', controllers.disableItems)
 .put('/items/modify', controllers.updateItem) // Update item
 .put('/items/update', controllers.updateItemContent) // Update only TDs non critial properties
+.post('/counters', controllers.sendCounters)
 // agent
 .get('/agent/:agid/items', controllers.getAgentItems) // change to post if depends on update or use query
 .delete('/agent/:agid', controllers.deleteAgent);

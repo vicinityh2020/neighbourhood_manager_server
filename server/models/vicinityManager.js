@@ -301,6 +301,14 @@ var token = new Schema({
   used: {type: Boolean, default: false}
 });
 
+var message = new Schema({
+  timestamp: {type: Date, required: true},
+  sourceOid: {type: String, required: true},
+  destinationOid: {type: String, required: true},
+  requestId: {type: String, required: true},
+  messageStatus: {type: String, required: true}
+});
+
 // Set schema options ==================================
 
 // TODO Set all autoIndex to false when moving to production
@@ -357,3 +365,4 @@ module.exports.node = mongoose.model('node', node);
 module.exports.auditLog = mongoose.model('auditLog', auditLog);
 module.exports.contract = mongoose.model('contract', contract);
 module.exports.token = mongoose.model('token', token);
+module.exports.message = mongoose.model('message', message);
