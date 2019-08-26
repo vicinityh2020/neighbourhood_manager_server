@@ -306,7 +306,22 @@ var message = new Schema({
   sourceOid: {type: String, required: true},
   destinationOid: {type: String, required: true},
   requestId: {type: String, required: true},
-  messageStatus: {type: String, required: true}
+  messageStatus: {type: String, required: true},
+  reqInitiator : {type: Boolean, required: true},
+  messageType : {type: String, required: false}
+});
+
+var counter = new Schema({
+  oid: {type: String, required: true},
+  agid: {type: String, required: true},
+  cid: {type: String, required: true},
+  records: [{
+    ok: Number,
+    notDelivered: Number,
+    notResponded: Number,
+    date: {type: Date, default: Date.now}
+  }],
+  updated: {type: Date, required: true}
 });
 
 // Set schema options ==================================
@@ -366,3 +381,4 @@ module.exports.auditLog = mongoose.model('auditLog', auditLog);
 module.exports.contract = mongoose.model('contract', contract);
 module.exports.token = mongoose.model('token', token);
 module.exports.message = mongoose.model('message', message);
+module.exports.counter = mongoose.model('counter', counter);

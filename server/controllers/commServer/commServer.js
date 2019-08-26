@@ -321,6 +321,21 @@ function sendCounters(req, res){
   }
 }
 
+/*
+Receive the count of messages from the Gateway
+*/
+function aggregateCounters(req, res){
+  counters.aggregateCounters()
+  .then(function(response){
+    console.log("Success");
+    res.json({"error": false, "message": response});
+  })
+  .catch(function(err){
+    console.log(err);
+    res.json({"error": true, "message": err});
+  });
+}
+
 // Export modules
 
 module.exports.registration = registration;
@@ -335,3 +350,4 @@ module.exports.getAgentItems = getAgentItems;
 module.exports.deleteAgent = deleteAgent;
 module.exports.neighbourhood = neighbourhood;
 module.exports.sendCounters = sendCounters;
+module.exports.aggregateCounters = aggregateCounters;
