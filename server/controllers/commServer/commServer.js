@@ -322,10 +322,26 @@ function sendCounters(req, res){
 }
 
 /*
-Receive the count of messages from the Gateway
+Process message into counter objects
 */
 function aggregateCounters(req, res){
   counters.aggregateCounters()
+  .then(function(response){
+    console.log("Success");
+    res.json({"error": false, "message": response});
+  })
+  .catch(function(err){
+    console.log(err);
+    res.json({"error": true, "message": err});
+  });
+}
+
+
+/*
+ Get processed counters from NM
+*/
+function getCounters(req, res){
+  counters.getCounters()
   .then(function(response){
     console.log("Success");
     res.json({"error": false, "message": response});
@@ -351,3 +367,4 @@ module.exports.deleteAgent = deleteAgent;
 module.exports.neighbourhood = neighbourhood;
 module.exports.sendCounters = sendCounters;
 module.exports.aggregateCounters = aggregateCounters;
+module.exports.getCounters = getCounters;

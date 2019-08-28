@@ -308,20 +308,12 @@ var message = new Schema({
   requestId: {type: String, required: true},
   messageStatus: {type: String, required: true},
   reqInitiator : {type: Boolean, required: true},
-  messageType : {type: String, required: false}
+  messageType : {type: String, required: true},
+  requestType : {type: String, required: true, enum: ['action', 'event', 'property', 'info', 'unknown']},
+  isProcessed: {type: Boolean, default: false}
 });
 
 var counter = new Schema({
-  oid: {type: String, required: true},
-  agid: {type: String, required: true},
-  cid: {type: String, required: true},
-  records: [{
-    ok: Number,
-    notDelivered: Number,
-    notResponded: Number,
-    date: {type: Date, default: Date.now}
-  }],
-  updated: {type: Date, required: true}
 });
 
 // Set schema options ==================================

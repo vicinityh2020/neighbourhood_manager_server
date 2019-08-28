@@ -17,6 +17,8 @@ router
 .put('/items/modify', controllers.updateItem) // Update item
 .put('/items/update', controllers.updateItemContent) // Update only TDs non critial properties
 .post('/counters', controllers.sendCounters)
+.get('/counters', controllers.getCounters) // GET THEM BY CID IN TOKEN
+// .get('/counters/:id', controllers.getCounters) // GET THEM BY OID
 .get('/counters/aggregate', controllers.aggregateCounters)
 // agent
 .get('/agent/:agid/items', controllers.getAgentItems) // change to post if depends on update or use query
