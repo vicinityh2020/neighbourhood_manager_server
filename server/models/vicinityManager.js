@@ -309,10 +309,25 @@ var message = new Schema({
   messageStatus: {type: String, required: true},
   reqInitiator : {type: Boolean, required: true},
   messageType : {type: String, required: true},
+  messageSize: {type: Number, required: true},
   requestType : {type: String, required: true, enum: ['action', 'event', 'property', 'info', 'unknown']},
   isProcessed: {type: Boolean, default: false}
 });
 
+// Daily aggregation of messages
+var record = new Schema({
+  agid : {type: String, required: true},
+  oid : {type: String, required: true},
+  cid : {type: String, required: true},
+  date : {type: Date, required: true},
+  action : {type: Number, required: true},
+  event : {type: Number, required: true},
+  property : {type: Number, required: true},
+  info : {type: Number, required: true},
+  unknown :{type: Number, required: true}
+});
+
+// Top level aggregation of records
 var counter = new Schema({
 });
 
@@ -373,4 +388,4 @@ module.exports.auditLog = mongoose.model('auditLog', auditLog);
 module.exports.contract = mongoose.model('contract', contract);
 module.exports.token = mongoose.model('token', token);
 module.exports.message = mongoose.model('message', message);
-module.exports.counter = mongoose.model('counter', counter);
+module.exports.record = mongoose.model('record', record);

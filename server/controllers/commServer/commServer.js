@@ -328,7 +328,7 @@ function aggregateCounters(req, res){
   counters.aggregateCounters()
   .then(function(response){
     console.log("Success");
-    res.json({"error": false, "message": response});
+    res.json({"error": false, "message": "Counters aggregated!"});
   })
   .catch(function(err){
     console.log(err);

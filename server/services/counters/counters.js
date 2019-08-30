@@ -1,5 +1,5 @@
 var messageOp = require('../../models/vicinityManager').message;
-var counterOp = require('../../models/vicinityManager').counter;
+var recordOp = require('../../models/vicinityManager').record;
 
 /**
 * Store messages from gateway
@@ -18,6 +18,7 @@ function storeCounters(records){
     message.requestId = records[i].requestId;
     message.timestamp = records[i].timestamp;
     message.reqInitiator = records[i].reqInitiator;
+    message.messageSize = Number(records[i].messageSize);
     message.messageType = records[i].messageType;
     message.requestType = getType(records[i].messageType);
     toStore.push(message.save());
@@ -32,16 +33,37 @@ function storeCounters(records){
 */
 
 function aggregateCounters(){
-// get messages db
-// aggregate
-// filter by date
-// cummulate totals
-// create array destOids
-// create array messageTypes
 
-// Process and add to counter db type if exists
-
-// store
+  return messageOp.aggregate([
+    {$match: {"isProcessed": false, "reqInitiator": true}},
+    {$project: {"date": { $dateFromParts : { "year": { $year: "$timestamp" }, "month": { $month: "$timestamp" },  "day": { $dayOfMonth: "$timestamp" }}}, "requestType": "$requestType", "oid": "$sourceOid" }},
+    {$lookup: { from: "items", localField: "oid", foreignField: "oid", as: "item" } },
+    {$project: {"date": "$date", "requestType": "$requestType", "messageSize": "$messageSize" ,"oid": "$oid", "agid": "$item.adid.extid", "cid": "$item.cid.extid"}},
+    {$unwind:"$agid"},
+    {$unwind:"$cid"},
+    {$group: {"_id": { agid: "$agid", "oid": "$oid", "cid": "$cid", "date": "$date"} ,
+              "totalSize": {$sum: "$messageSize"},
+              "action":{$sum: { $cond: [{$eq: [ "$requestType", "action" ]}, 1, 0]  } },
+              "property":{$sum: { $cond: [{$eq: [ "$requestType", "property" ]}, 1, 0]  } },
+              "event":{$sum: { $cond: [{$eq: [ "$requestType", "event" ]}, 1, 0]  } },
+              "info":{$sum: { $cond: [{$eq: [ "$requestType", "info" ]}, 1, 0]  } },
+              "unknown":{$sum: { $cond: [{$eq: [ "$requestType", "unknown" ]}, 1, 0]  } } } }
+  ])
+  .then(function(response){
+    var toStore = [];
+    for(var i = 0, l = response.length; i < l; i++){
+      toStore.push(
+        recordOp.update({date: response[i]._id.date, oid: response[i]._id.oid},
+          { $inc: {totalSize: response[i].totalSize, action: response[i].action, event: response[i].event, property: response[i].property, info: response[i].info, unknown: response[i].unknown},
+            $set: {agid: response[i]._id.agid, cid: response[i]._id.cid}
+          }, {upsert: true})
+      );
+    }
+    return Promise.all(toStore);
+  })
+  .then(function(response){
+    return messageOp.update({"isProcessed": false}, {$set: {"isProcessed": true}}, {multi: true})
+  })
 }
 
 /**
