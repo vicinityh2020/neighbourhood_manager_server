@@ -36,7 +36,7 @@ function aggregateCounters(){
 
   return messageOp.aggregate([
     {$match: {"isProcessed": false, "reqInitiator": true}},
-    {$project: {"date": { $dateFromParts : { "year": { $year: "$timestamp" }, "month": { $month: "$timestamp" },  "day": { $dayOfMonth: "$timestamp" }}}, "requestType": "$requestType", "oid": "$sourceOid" }},
+    {$project: {"date": { $dateFromParts : { "year": { $year: "$timestamp" }, "month": { $month: "$timestamp" },  "day": { $dayOfMonth: "$timestamp" }}}, "messageSize": "$messageSize", "requestType": "$requestType", "oid": "$sourceOid" }},
     {$lookup: { from: "items", localField: "oid", foreignField: "oid", as: "item" } },
     {$project: {"date": "$date", "requestType": "$requestType", "messageSize": "$messageSize" ,"oid": "$oid", "agid": "$item.adid.extid", "cid": "$item.cid.extid"}},
     {$unwind:"$agid"},
