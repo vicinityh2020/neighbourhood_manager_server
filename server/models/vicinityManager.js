@@ -320,6 +320,7 @@ var record = new Schema({
   oid : {type: String, required: true},
   cid : {type: String, required: true},
   date : {type: Date, required: true},
+  totalSize : {type: Number, required: true},
   action : {type: Number, required: true},
   event : {type: Number, required: true},
   property : {type: Number, required: true},
