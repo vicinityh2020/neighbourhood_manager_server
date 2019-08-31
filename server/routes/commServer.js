@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+var jwt = require("../middlewares/jwtauth");
 
 var controllers = require('../controllers/commServer/commServer');
 
@@ -17,8 +18,7 @@ router
 .put('/items/modify', controllers.updateItem) // Update item
 .put('/items/update', controllers.updateItemContent) // Update only TDs non critial properties
 .post('/counters', controllers.sendCounters)
-.get('/counters', controllers.getCounters) // GET THEM BY CID IN TOKEN
-// .get('/counters/:id', controllers.getCounters) // GET THEM BY OID
+.get('/counters', jwt, controllers.getCounters) // GET THEM IN QUERY PARAMS
 .get('/counters/aggregate', controllers.aggregateCounters)
 // agent
 .get('/agent/:agid/items', controllers.getAgentItems) // change to post if depends on update or use query

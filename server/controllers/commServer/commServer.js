@@ -309,7 +309,6 @@ function sendCounters(req, res){
   if(records && records.length > 0){
     counters.storeCounters(records)
     .then(function(response){
-      console.log("Success");
       res.json({"error": false, "message": "success"});
     })
     .catch(function(err){
@@ -327,7 +326,6 @@ Process message into counter objects
 function aggregateCounters(req, res){
   counters.aggregateCounters()
   .then(function(response){
-    console.log("Success");
     res.json({"error": false, "message": "Counters aggregated!"});
   })
   .catch(function(err){
@@ -341,9 +339,9 @@ function aggregateCounters(req, res){
  Get processed counters from NM
 */
 function getCounters(req, res){
-  counters.getCounters()
+  var query = req.query;
+  counters.getCounters(query)
   .then(function(response){
-    console.log("Success");
     res.json({"error": false, "message": response});
   })
   .catch(function(err){

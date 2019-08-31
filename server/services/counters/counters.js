@@ -9,7 +9,6 @@ var recordOp = require('../../models/vicinityManager').record;
 
 function storeCounters(records){
   var toStore = [];
-  console.log("Storing records...");
   for(var i = 0, l = records.length; i < l; i++){
     var message = new messageOp();
     message.messageStatus = records[i].messageStatus;
@@ -72,7 +71,34 @@ function aggregateCounters(){
 * @return {Array of Objects}
 */
 
-function getCounters(){}
+function getCounters(args){
+  var query = {}; // Level selection
+  var d_query = {}; // Date selection
+  // Find which level is being queried
+  if(args.cid){ query = {cid: args.cid} }
+  else if(args.agid){ query = {agid: args.agid} }
+  else if(args.oid){ query = {oid: args.oid} }
+  else { Promise.reject("Type of id not found!") }
+  // Find date range (day, week, month, total)
+  var d_string = args.date;
+  var d = new Date();
+  var d_now = new Date();
+  if(d_string === "day"){ d.setDate(d.getDate()-1) }
+  else if(d_string === "week"){ d.setDate(d.getDate()-8) }
+  else if(d_string === "month"){ d.setDate(d.getDate()-31) }
+  else if(d_string === "year"){ d.setDate(d.getDate()-366) }
+  else { Promise.reject("Date not found!") }
+  d.setHours(0,0,0,0); // Remove hours from date
+  d_now.setHours(0,0,0,0); // Remove hours from date
+  d_query = {$gte: d, $lt: d_now}; // Exclude today from query, not calc yet!
+  // Get values
+  return recordOp.aggregate([
+    {$match: query},
+    {$sort: {_id: 1}},
+    {$group: {"_id": {"date": "$date"} , "totalSize": {$sum: "$totalSize"}, "action": {$sum: "$action"}, "property": {$sum: "$property"}, "event": {$sum: "$event"}, "info": {$sum: "$info"}, "unknown": {$sum: "$unknown"} }},
+    {$match: {date: d_query} }
+  ]);
+}
 
 
 ////// PRIVATE FUNCTIONS
@@ -84,16 +110,15 @@ function getCounters(){}
 */
 
 function getType(x){
-  var y = "unknown";
   var actions = ["CANCELTASK", "GETLISTOFACTIONS", "GETTASKSTATUS", "STARTACTION"];
   var events = ["GETEVENTCHANNELSTATUS", "GETLISTOFEVENTS", "SUBSCRIBETOEVENTCHANNEL", "UNSUBSCRIBEFROMEVENTCHANNEL"];
   var properties = ["GETLISTOFPROPERTIES", "GETPROPERTYVALUE", "SETPROPERTYVALUE"];
   var agent = ["GETTHINGDESCRIPTION"];
-  if(actions.indexOf(x) != -1) y = "action";
-  if(events.indexOf(x) != -1) y = "event";
-  if(properties.indexOf(x) != -1) y = "property";
-  if(agent.indexOf(x) != - 1) y = "info";
-  return y;
+  if(actions.indexOf(x) != -1){ return "action" }
+  else if(events.indexOf(x) != -1){ return "event" }
+  else if(properties.indexOf(x) != -1){ return "property" }
+  else if(agent.indexOf(x) != - 1){ return "info" }
+  else { return "unknown" }
 }
 
 ///// EXPORT MODULES
