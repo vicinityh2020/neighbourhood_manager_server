@@ -309,10 +309,11 @@ function sendCounters(req, res){
   if(records && records.length > 0){
     counters.storeCounters(records)
     .then(function(response){
+      logger.log(req, res, {type: 'debug', data: 'Counters sent!'});
       res.json({"error": false, "message": "success"});
     })
     .catch(function(err){
-      console.log(err);
+      logger.log(req, res, {type: 'error', data: err});
       res.json({"error": true, "message": err});
     });
   } else {
@@ -326,10 +327,11 @@ Process message into counter objects
 function aggregateCounters(req, res){
   counters.aggregateCounters()
   .then(function(response){
+    logger.log(req, res, {type: 'debug', data: 'Counters aggregated!'});
     res.json({"error": false, "message": "Counters aggregated!"});
   })
   .catch(function(err){
-    console.log(err);
+    logger.log(req, res, {type: 'error', data: err});
     res.json({"error": true, "message": err});
   });
 }
@@ -342,10 +344,11 @@ function getCounters(req, res){
   var query = req.query;
   counters.getCounters(query)
   .then(function(response){
+    logger.log(req, res, {type: 'debug', data: 'Counters retrieved!'});
     res.json({"error": false, "message": response});
   })
   .catch(function(err){
-    console.log(err);
+    logger.log(req, res, {type: 'error', data: err});
     res.json({"error": true, "message": err});
   });
 }

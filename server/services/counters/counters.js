@@ -96,7 +96,7 @@ function getCounters(args){
     {$match: query},
     {$sort: {_id: 1}},
     {$group: {"_id": {"date": "$date"} , "totalSize": {$sum: "$totalSize"}, "action": {$sum: "$action"}, "property": {$sum: "$property"}, "event": {$sum: "$event"}, "info": {$sum: "$info"}, "unknown": {$sum: "$unknown"} }},
-    {$match: {date: d_query} }
+    {$match: { "_id.date" : d_query} }
   ]);
 }
 
