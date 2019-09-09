@@ -1,5 +1,7 @@
 var messageOp = require('../../models/vicinityManager').message;
 var recordOp = require('../../models/vicinityManager').record;
+var userAccountOp = require('../../models/vicinityManager').userAccount;
+var nodeOp = require('../../models/vicinityManager').node;
 
 /**
 * Store messages from gateway
@@ -66,12 +68,13 @@ function aggregateCounters(){
 }
 
 /**
-* Get counters by CID
-* @param {String} CID
+* Get counters by CID/AGID/OID
+* @param {String} CID/AGID/OID
 * @return {Array of Objects}
 */
 
 function getCounters(args){
+  var result = {};
   var query = {}; // Level selection
   var d_query = {}; // Date selection
   // Find which level is being queried
@@ -81,23 +84,48 @@ function getCounters(args){
   else { Promise.reject("Type of id not found!") }
   // Find date range (day, week, month, total)
   var d_string = args.date;
-  var d = new Date();
-  var d_now = new Date();
-  if(d_string === "day"){ d.setDate(d.getDate()-1) }
-  else if(d_string === "week"){ d.setDate(d.getDate()-8) }
-  else if(d_string === "month"){ d.setDate(d.getDate()-31) }
-  else if(d_string === "year"){ d.setDate(d.getDate()-366) }
-  else { Promise.reject("Date not found!") }
-  d.setHours(0,0,0,0); // Remove hours from date
-  d_now.setHours(0,0,0,0); // Remove hours from date
-  d_query = {$gte: d, $lt: d_now}; // Exclude today from query, not calc yet!
+  var d_ini = new Date();
+  var d_end = new Date();
+  if(d_string === "day"){ d_ini.setDate(d_ini.getDate()-1) }
+  else if(d_string === "week"){ d_ini.setDate(d_ini.getDate()-8) }
+  else if(d_string === "month"){ d_ini.setDate(d_ini.getDate()-31) }
+  else if(d_string === "year"){ d_ini.setDate(d_ini.getDate()-366) }
+  else{
+    d_ini = new Date(d_string);
+    if(d_ini.getMonth() === 11){
+      d_end = new Date(d_ini.getFullYear() + 1, 0, 1);
+    } else {
+      d_end = new Date(d_ini.getFullYear(), d_ini.getMonth() + 1, 1);
+    }
+  }
+  d_ini.setHours(0,0,0,0); // Remove hours from date
+  d_end.setHours(0,0,0,0); // Remove hours from date
+  d_query = {$gte: d_ini, $lt: d_end}; // Exclude today from query, not calc yet!
   // Get values
   return recordOp.aggregate([
     {$match: query},
     {$sort: {_id: 1}},
     {$group: {"_id": {"date": "$date"} , "totalSize": {$sum: "$totalSize"}, "action": {$sum: "$action"}, "property": {$sum: "$property"}, "event": {$sum: "$event"}, "info": {$sum: "$info"}, "unknown": {$sum: "$unknown"} }},
     {$match: { "_id.date" : d_query} }
-  ]);
+  ])
+  .then(function(response){
+    result.data = response;
+    if(args.cid){
+      return userAccountOp.find(query).select({hasNodes: 1});
+    }
+    else if(args.agid){
+      var query2 = {adid: query.agid};
+      return nodeOp.find(query2).select({hasItems: 1});
+    }
+    else { return Promise.resolve([]); }
+  })
+  .then(function(response){
+    if(args.cid){ result.objects = response[0].hasNodes; }
+    else if(args.agid){ result.objects = response[0].hasItems; }
+    else { result.objects = response; }
+    console.log(result);
+    return Promise.resolve(result);
+  });
 }
 
 
