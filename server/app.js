@@ -157,7 +157,12 @@ mongoConnect();
 // Aggregate counters
 var run_tasks = function(){
   logger.debug("Task scheduler started! Repeating every " + config.serverTimeInterval + " ms");
-  setInterval(counters.aggregateCounters, config.serverTimeInterval)
+  call_counters();
+  setInterval(call_counters, config.serverTimeInterval);
+}
+
+var call_counters = function(){
+  return counters.aggregateCounters()
   .then(function(response){
     logger.info("Counters successfully aggregated!");
   })
