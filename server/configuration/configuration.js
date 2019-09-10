@@ -29,6 +29,8 @@ config.profilerLog = process.env.profilerLog;
 config.maxPayload = process.env.SERVER_MAX_PAYLOAD || "10mb";
 // Server timeout
 config.serverTimeout = process.env.SERVER_TIMEOUT_MS || 30000;
+// Scheduled tasks frequency
+config.serverTimeInterval = process.env.SERVER_TIME_INTERVAL || 6000000;
 
 /*
 MongoDB

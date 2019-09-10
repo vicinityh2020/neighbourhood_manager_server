@@ -46,6 +46,9 @@ var operational = require('./routes/operational');
 var jwtauth = require("./middlewares/jwtauth");
 var logger = require("./middlewares/logger");
 
+// Import Services
+var counters = require('./services/counters/counters');
+
 // Start express app
 var app = express();
 
@@ -142,12 +145,26 @@ var mongoConnect = function(){
       setTimeout(retryConnection, 5000);
     } else {
       logger.info("Datasource connection established!");
+      run_tasks();
     }
   });
 };
 
 // STARTING DB CONNECTION
 mongoConnect();
+
+// STARTING scheduled tasks
+// Aggregate counters
+var run_tasks = function(){
+  logger.debug("Task scheduler started! Repeating every " + config.serverTimeInterval + " ms");
+  setInterval(counters.aggregateCounters, config.serverTimeInterval)
+  .then(function(response){
+    logger.info("Counters successfully aggregated!");
+  })
+  .catch(function(error){
+    logger.error("Problem aggregating counters");
+  });
+}
 
 /*
 Export app module
