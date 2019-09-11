@@ -111,11 +111,11 @@ function getCounters(args){
   .then(function(response){
     result.data = response;
     if(args.cid){
-      return userAccountOp.find(query).select({hasNodes: 1});
+      return userAccountOp.find(query).select({hasNodes: 1}).populate('hasNodes.id','name').lean();
     }
     else if(args.agid){
       var query2 = {adid: query.agid};
-      return nodeOp.find(query2).select({hasItems: 1});
+      return nodeOp.find(query2).select({hasItems: 1}).populate('hasItems.id','name').lean();
     }
     else { return Promise.resolve([]); }
   })

@@ -145,7 +145,7 @@ var mongoConnect = function(){
       setTimeout(retryConnection, 5000);
     } else {
       logger.info("Datasource connection established!");
-      run_tasks();
+      if(config.env !== 'test') run_tasks();
     }
   });
 };
