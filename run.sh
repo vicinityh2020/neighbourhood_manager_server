@@ -65,11 +65,12 @@ echo RUNNING THE CONTAINER...
 # the script is called
 
 if [ ${LOCAL} == true ]; then
-  docker run -p $PORT:3000 \
-        -it \
-        --rm \
-        --name ${NAME} \
-        ${NAME}:latest
+  # docker run -p $PORT:3000 \
+  #       -it \
+  #       --rm \
+  #       --name ${NAME} \
+  #       ${NAME}:latest
+  pm2 start vcnt_server.config.js --env developemnt
 
 elif [ ${SCHEDULED} == true ]; then
 

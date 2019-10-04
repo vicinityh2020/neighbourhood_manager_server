@@ -128,6 +128,7 @@ var node = new Schema({
   type: [ String ],
   status: {type: String, enum: ['active', 'deleted']},
   hasItems: [ oidSchema ],
+  hasKey: {type: Boolean, default: false},
   eventUri: String,
   agent: String
 });
@@ -328,8 +329,10 @@ var record = new Schema({
   unknown :{type: Number, required: true}
 });
 
-// Top level aggregation of records
-var counter = new Schema({
+// Stores gateway keys
+var gatewayKey = new Schema({
+  agid : {type: String, required: true},
+  key: {type: String, required: true}
 });
 
 // Set schema options ==================================
@@ -374,6 +377,7 @@ item.index({name: 1}, { unique: false });
 item.index({oid: 1}, { unique: true });
 node.index({adid: 1}, { unique: true });
 contract.index({ctid: 1}, { unique: true });
+gatewayKey.index({agid: 1}, { unique: true });
 
 // Exports models  ===============================
 
@@ -390,3 +394,4 @@ module.exports.contract = mongoose.model('contract', contract);
 module.exports.token = mongoose.model('token', token);
 module.exports.message = mongoose.model('message', message);
 module.exports.record = mongoose.model('record', record);
+module.exports.gatewayKey = mongoose.model('gatewayKey', gatewayKey);
