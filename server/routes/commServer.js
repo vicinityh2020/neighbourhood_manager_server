@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var jwt = require("../middlewares/jwtauth");
-
+var guard = require("../middlewares/guard");
 var controllers = require('../controllers/commServer/commServer');
 
 // Endpoints accessible from the gateway
@@ -17,10 +17,11 @@ router
 .post('/items/disable', controllers.disableItems)
 .put('/items/modify', controllers.updateItem) // Update item
 .put('/items/update', controllers.updateItemContent) // Update only TDs non critial properties
+// agent
+.get('/handshake', guard, controllers.handshake)
 .post('/counters', controllers.sendCounters)
 .get('/counters', jwt, controllers.getCounters) // GET THEM IN QUERY PARAMS
 .get('/counters/aggregate', controllers.aggregateCounters)
-// agent
 .get('/agent/:agid/items', controllers.getAgentItems) // change to post if depends on update or use query
 .delete('/agent/:agid', controllers.deleteAgent);
 

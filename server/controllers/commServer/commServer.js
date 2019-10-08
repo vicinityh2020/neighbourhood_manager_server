@@ -353,6 +353,13 @@ function getCounters(req, res){
   });
 }
 
+/*
+ Get processed counters from NM
+*/
+function handshake(req, res){
+    res.json({"error": false, "message": "HELLO"});
+}
+
 // Export modules
 
 module.exports.registration = registration;
@@ -369,3 +376,4 @@ module.exports.neighbourhood = neighbourhood;
 module.exports.sendCounters = sendCounters;
 module.exports.aggregateCounters = aggregateCounters;
 module.exports.getCounters = getCounters;
+module.exports.handshake = handshake;

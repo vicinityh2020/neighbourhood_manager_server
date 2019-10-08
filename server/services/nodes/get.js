@@ -1,4 +1,4 @@
-// Global Objects and variabled
+// Global Objects and variables
 var logger = require('../../middlewares/logger');
 var nodeOp = require('../../models/vicinityManager').node;
 var mongoose = require('mongoose');
