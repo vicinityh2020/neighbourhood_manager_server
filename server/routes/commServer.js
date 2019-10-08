@@ -18,7 +18,7 @@ router
 .put('/items/modify', controllers.updateItem) // Update item
 .put('/items/update', controllers.updateItemContent) // Update only TDs non critial properties
 // agent
-.get('/handshake', guard, controllers.handshake)
+.get('/handshake', guard.authorize, controllers.handshake)
 .post('/counters', controllers.sendCounters)
 .get('/counters', jwt, controllers.getCounters) // GET THEM IN QUERY PARAMS
 .get('/counters/aggregate', controllers.aggregateCounters)

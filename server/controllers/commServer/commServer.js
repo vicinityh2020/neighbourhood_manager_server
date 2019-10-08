@@ -357,7 +357,9 @@ function getCounters(req, res){
  Get processed counters from NM
 */
 function handshake(req, res){
-    res.json({"error": false, "message": "HELLO"});
+  var agid = req.body.token.agid;
+  var msg = agid ? "Gateway " + agid + " authenticated" : "Gateway connected as anonymous, restrictions might apply";
+  res.json({"error": false, "message": msg});
 }
 
 // Export modules
