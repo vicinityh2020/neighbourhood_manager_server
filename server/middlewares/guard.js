@@ -1,8 +1,13 @@
+/**
+Gateway token validation middleware
+Using JWT and asynchronous key encryption
+Used as gateway authentication method
+*/
 var jwt = require('jsonwebtoken');
 var logger = require("../middlewares/logBuilder");
 var opKey = require("../models/vicinityManager").gatewayKey;
 
-module.exports.authorize = function(req, res, next) {
+module.exports = function(req, res, next) {
   var auth = req.headers['authorization'] || req.headers['X-ACCESS-TOKEN'];
   var publicKey = "";
   var token = "";
@@ -17,7 +22,7 @@ module.exports.authorize = function(req, res, next) {
         return validate(token, publicKey);
       })
       .then(function(response){
-        req.body.token = { agid: info.iss, encryption: false };
+        req.body.token = { agid: info.iss };
         next();
       })
       .catch(function(err){
@@ -29,13 +34,14 @@ module.exports.authorize = function(req, res, next) {
       next();
     }
   } else {
-    req.body.token = { agid: null, encryption: false };
+    req.body.token = { agid: null };
     next();
   }
 };
 
 // Private functions
 
+// Validate origin and ownership of the message
 function validate(token, pubkey){
  return new Promise(function(resolve, reject) {
    jwt.verify(token, pubkey, { aud: 'NM' }, function(err, decoded) {
@@ -45,6 +51,7 @@ function validate(token, pubkey){
  });
 }
 
+// Extract agid info from the original token
 function getInfo(x){
   var i = x.indexOf(".");
   var j = x.lastIndexOf(".");
