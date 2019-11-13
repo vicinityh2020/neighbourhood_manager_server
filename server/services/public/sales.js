@@ -1,4 +1,5 @@
 var config = require('../../configuration/configuration');
+var mailing = require('../../services/mail/mailing');
 
 /**
  * Post a mail to sales
