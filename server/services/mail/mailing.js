@@ -32,6 +32,10 @@ function sendMail(mailInfo){
           if(mailInfo.organisation){mailContent = mailContent.replace("#organisation", mailInfo.organisation);}
           if(mailInfo.sentByName){mailContent = mailContent.replace("#sentByName", mailInfo.sentByName);}
           if(mailInfo.sentByOrg){mailContent = mailContent.replace("#sentByOrg", mailInfo.sentByOrg);}
+          if(mailInfo.customerMail){mailContent = mailContent.replace("#customerMail", mailInfo.customerMail);}
+          if(mailInfo.plan){mailContent = mailContent.replace("#plan", mailInfo.plan);}
+          if(mailInfo.comments){mailContent = mailContent.replace("#comments", mailInfo.comments);}
+
           mailContent = mailContent.replace("#link", mailInfo.link);
 
           var mailOptions = {

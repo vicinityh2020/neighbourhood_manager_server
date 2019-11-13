@@ -65,6 +65,7 @@ config.smtpUser = process.env.SMTP_USER;
 config.smtpPassword = process.env.SMTP_PASSWORD;
 config.mailServer = process.env.SMTP_MAIL_SERVER;
 config.approverMail = process.env.SMTP_APPROVER_MAIL;
+config.salesMail = process.env.SMTP_SALES_MAIL;
 
 
 /*

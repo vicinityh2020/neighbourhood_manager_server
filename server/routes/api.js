@@ -57,6 +57,7 @@ router
   .post('/repository/validate', apiItems.validateItemDescription)
   .get('/repository/annotations', apiItems.getAnnotations)
 // Statistics
-  .get('/public/statistics', apiController.getStatistics);
+  .get('/public/statistics', apiController.getStatistics)
+  .post('/public/sales', apiController.postSales);
 
 module.exports = router;

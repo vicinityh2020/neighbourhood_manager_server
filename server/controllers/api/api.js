@@ -5,6 +5,7 @@ var logger = require("../../middlewares/logBuilder");
 
 var sGetSearch = require("../../services/search/get");
 var sPublic = require("../../services/public/statistics");
+var sSales = require("../../services/public/sales");
 
 
 // Main functions - VCNT API
@@ -77,4 +78,21 @@ exports.getStatistics = function(req, res, next) {
     if(err) logger.log(req, res, {type: 'error', data: response});
     res.json({error: err, message: response});
   });
+};
+
+/**
+ * Post a mail to sales
+ * @params {Object} Body with the data to complete the mail
+ * @return {String} Result acknowledgement
+ */
+exports.postSales = function(req, res, next) {
+  var data = req.body;
+  if(!data){
+    res.json({error: false, message: "Missing mail parameters"});
+  } else {
+    sSales.sendMail(data, function(err, response){
+      if(err) logger.log(req, res, {type: 'error', data: response});
+      res.json({error: err, message: "Message sent to SALES"});
+    });
+  }
 };
