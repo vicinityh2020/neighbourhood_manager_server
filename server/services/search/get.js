@@ -106,10 +106,9 @@ var map = require("../../configuration/map");
         getOnlyId(friends, things.knows);
         query = {
           $or :[
-          {$and: [ { 'cid.id': cid }, { accessLevel: { $gte:0 } } ] },
+          {$and: [ { 'cid.id': cid }, { accessLevel: { $gte:0 } }, { status: {$ne: 'deleted'} } ] },
           {$and: [ { 'cid.id': {$in: friends}}, { accessLevel: { $gte:1 } } ] },
-          { accessLevel: { $gte:2 } },
-          { status: {$ne: 'deleted'}}
+          { accessLevel: { $gte:2 } }
         ],
         name: {$regex: sT}
         };
