@@ -18,6 +18,7 @@ function getUserInfo(req, res, callback) {
   var myUid = mongoose.Types.ObjectId(req.body.decoded_token.uid);
   var myCid = mongoose.Types.ObjectId(req.body.decoded_token.orgid);
   var friends = [];
+  var orgname;
   var data;
   userAccountOp.findOne({_id: myCid}, {knows:1, name:1})
   .then(function(response){
@@ -25,7 +26,7 @@ function getUserInfo(req, res, callback) {
       res.status(401);
       callback(false, 'Wrong cid provided...');
     } else {
-      var orgname = response.name;
+      orgname = response.name;
       getIds(response.knows, friends);
       userOp.findOne({_id:uid}, {name:1, email:1, cid:1, occupation:1, accessLevel:1, hasItems:1, hasContracts:1, 'authentication.principalRoles':1 }, function(err, response){
         data = response;
@@ -33,15 +34,27 @@ function getUserInfo(req, res, callback) {
           callback(true, err);
         } else {
           if(myUid.toString() === uid.toString() || myCid.toString() === data.cid.id.toString()){
-            data.orgname = orgname;
-            callback(false, data);
+            callback(false,
+              {accessLevel: response.accessLevel,
+              authentication: {principalRoles: response.authentication.principalRoles},
+              cid: response.cid,
+              email: response.email,
+              hasContracts: response.hasContracts,
+              hasItems: response.hasItems,
+              name: response.name,
+              occupation: response.occupation,
+              orgname: orgname,
+              _id: reponse._id }
+            );
           } else if((friends.indexOf(data.cid.id.toString()) !== -1 && data.accessLevel === 1) || data.accessLevel === 2){
-            data.orgname = orgname;
-            data.accessLevel = null;
-            data.hasItems = null;
-            data.hasContracts = null;
-            data.authentication.principalRoles = null;
-            callback(false, data);
+            callback(false,
+              { cid: response.cid,
+              email: response.email,
+              name: response.name,
+              occupation: response.occupation,
+              orgname: orgname,
+              _id: reponse._id }
+            );
           } else {
             logger.log(req, res, {type: 'warn', data: 'Not authorized to see the user'});
             res.status(401);
