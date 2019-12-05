@@ -164,7 +164,7 @@ function getItemsContracted(req, res, api, callback) {
       var n = aux.indexOf("@");
       oids.push(aux.substring(0, n));
     }
-    return itemOp.find({oid: {$in: oids}, 'cid.id': {$ne: mycid} }, {info: 1}).lean();
+    return itemOp.find({oid: {$in: oids}, 'cid.id': {$ne: mycid} }, {info: 1, cid: 1, uid: 1, adid: 1}).populate('cid.id', 'name').lean();
   })
   .then(function(response){
     if(!response){
