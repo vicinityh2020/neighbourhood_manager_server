@@ -33,6 +33,7 @@ function getUserInfo(req, res, callback) {
           callback(true, err);
         } else {
           if(myUid.toString() === uid.toString() || myCid.toString() === data.cid.id.toString()){
+            data.orgname = orgname;
             callback(false, data);
           } else if((friends.indexOf(data.cid.id.toString()) !== -1 && data.accessLevel === 1) || data.accessLevel === 2){
             data.orgname = orgname;
@@ -59,7 +60,7 @@ function getOne(o_id, api, callback) {
   var projection;
   if(api){ projection = "name email cid accessLevel"; }
   else { projection = "-authentication.hash"; }
-  userOp.findById(o_id).select(projection).populate('cid.id', 'name')
+  userOp.findById(o_id).select(projection)
   .then(function(data){
     callback(false, data);
   })
