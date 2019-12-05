@@ -44,7 +44,7 @@ function getUserInfo(req, res, callback) {
               name: response.name,
               occupation: response.occupation,
               orgname: orgname,
-              _id: reponse._id }
+              _id: response._id }
             );
           } else if((friends.indexOf(data.cid.id.toString()) !== -1 && data.accessLevel === 1) || data.accessLevel === 2){
             callback(false,
@@ -53,7 +53,7 @@ function getUserInfo(req, res, callback) {
               name: response.name,
               occupation: response.occupation,
               orgname: orgname,
-              _id: reponse._id }
+              _id: response._id }
             );
           } else {
             logger.log(req, res, {type: 'warn', data: 'Not authorized to see the user'});
