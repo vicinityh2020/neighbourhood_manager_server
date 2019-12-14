@@ -99,7 +99,7 @@ function requestReg(req, res, callback) {
         };
       return mailing.sendMail(mailInfo);
     })
-    .then(function(response){
+    .then(function(){
       callback(false, "Registration request created. A mail will be sent upon approval.");
     })
     .catch(function(err){
@@ -112,7 +112,7 @@ function requestReg(req, res, callback) {
       db.hash = hash;
       return registrationAndVerificationMail(db);
     })
-    .then(function(response){
+    .then(function(){
       callback(false, "Registration mail sent to invited user/organisation!");
     })
     .catch(function(err){
@@ -141,7 +141,7 @@ function createReg(id, req, res, callback) {
   // Case new company registration
     if ((raw.type == "newCompany") && (raw.status == "verified")){
       saveOrganisation(dbUser, raw)
-      .then(function(response){
+      .then(function(){
         logger.log(req, res, {type: 'audit', data: "New organisation was successfuly saved!"});
         callback(false, "New userAccount was successfuly saved!");
       })
@@ -151,7 +151,7 @@ function createReg(id, req, res, callback) {
       // Case new user registration
     }else if ((raw.type == "newUser") && (raw.status == "verified")){
       saveUser(dbUser, raw)
-      .then(function(response){
+      .then(function(){
         logger.log(req, res, {type: 'audit', data: "New user was successfuly saved!"});
         callback(false, "New userAccount was successfuly saved!");
       })
@@ -166,10 +166,10 @@ function createReg(id, req, res, callback) {
           subject : "Verification email to join VICINITY", emailTo : raw.email
         };
         mailing.sendMail(mailInfo)
-        .then(function(response){
-          return notificationAPI.changeNotificationStatus("", "", 1, {sentByReg: raw._id});
+        .then(function(){
+          return notifHelper.changeNotificationStatus("", "", 1, {sentByReg: raw._id});
         })
-        .then(function(response){
+        .then(function(){
           logger.log(req, res, {type: 'audit', data: "Verification mail sent"});
           callback(false, "Verification mail sent");
         })
@@ -183,10 +183,10 @@ function createReg(id, req, res, callback) {
           subject : "Issue in the process to join VICINITY", emailTo : raw.email
         };
         mailing.sendMail(mailInfo)
-        .then(function(response){
-          return notificationAPI.changeNotificationStatus("", "", 1, {sentByReg: raw._id});
+        .then(function(){
+          return notifHelper.changeNotificationStatus("", "", 1, {sentByReg: raw._id});
         })
-        .then(function(response){
+        .then(function(){
           logger.log(req, res, {type: 'audit', data: "Rejection mail sent"});
           callback(false, "Rejection mail sent");
         })
@@ -210,7 +210,7 @@ function createReg(id, req, res, callback) {
 * @return {Object} New user and org ids
 */
 function fastRegistration(req, res, callback){
-  var token_mail = req.body.decoded_token.sub;
+  // var token_mail = req.body.decoded_token.sub;
   var data = req.body;
   var saltRounds = 10;
   var dbUser = {};
@@ -336,28 +336,28 @@ function saveOrganisation(dbUser, raw){
     userData.cid = {id: orgData._id, extid: orgData.cid}; // Adding the company id to the new user
     return userData.save();
   })
-  .then(function(response){
+  .then(function(){
     return audits.create(
       { kind: 'user', item: userData._id , extid: userData.email },
       { kind: 'userAccount', item: orgData._id, extid: orgData.cid },
       {  },
       1, null);
     })
-    .then(function(response){
+    .then(function(){
       var payload = {
         name: orgData.cid + '_ownDevices',
         description: orgData.name
       };
       return commServer.callCommServer(payload, 'groups', 'POST'); // Creates org group in commServer
     })
-    .then(function(response){
+    .then(function(){
       var payload = {
         name: orgData.cid + '_agents',
         description: orgData.name + ' agents'
       };
       return commServer.callCommServer(payload, 'groups', 'POST'); // Creates org group in commServer
     })
-    .then(function(response){
+    .then(function(){
       return Promise.resolve({email: userData.email, uid: userData._id, _id: orgData._id});
     });
 }
@@ -373,7 +373,7 @@ function saveUser(dbUser, raw){
     userData = response;
     return userAccountOp.findOneAndUpdate({"_id": userAccountId}, {$push: {accountOf: {id: userData._id, extid: userData.email}}});
   })
-  .then(function(response){
+  .then(function(){
     return audits.create(
       { kind: 'user', item: userData._id , extid: userData.email },
       { kind: 'userAccount', item: userAccountId, extid: cid },

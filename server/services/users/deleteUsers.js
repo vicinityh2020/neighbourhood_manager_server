@@ -90,6 +90,7 @@ function deleting(id, otherParams, callback){
       return new Promise(function(resolve, reject) { reject('User has items or contracts'); });
     } else {
       obj.name = aux.name + ":" + uuid();
+      obj.email = aux.email + ":" + uuid();
       return userOp.update({_id: id}, { $set: obj });
     }
   })
