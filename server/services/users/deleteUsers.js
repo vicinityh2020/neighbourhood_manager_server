@@ -90,11 +90,11 @@ function deleting(id, otherParams, callback){
       return new Promise(function(resolve, reject) { reject('User has items or contracts'); });
     } else {
       obj.name = aux.name + ":" + uuid();
-      obj.email = aux.email + ":" + uuid();
+      obj.email = uuid();
       return userOp.update({_id: id}, { $set: obj });
     }
   })
-  .then(function(response){
+  .then(function(){
     if(!override){
       return audits.create(
         { kind: 'user', item: userId , extid: userMail },
@@ -105,8 +105,8 @@ function deleting(id, otherParams, callback){
       Promise.resolve(true);
     }
   })
-  .then(function(response){ return userAccountOp.update({_id: cid.id}, {$pull: {accountOf: { id: id }}}); })
-  .then(function(response){
+  .then(function(){ return userAccountOp.update({_id: cid.id}, {$pull: {accountOf: { id: id }}}); })
+  .then(function(){
     logger.log(otherParams.req, otherParams.res, {type: 'audit', data: {user: userMail, action: 'deleteUser', item: id }});
     callback(id, "Success");
   })
